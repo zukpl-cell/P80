@@ -13,10 +13,12 @@ button{width:100%;padding:14px;margin:6px 0;background:#ff3c00;border:none;color
 input{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:none}
 .card{background:#1c1c1c;padding:15px;border-radius:10px;margin-bottom:12px}
 h1{text-align:center}
+a{color:#ff7a00;text-decoration:none}
 .green{color:#00ff88}
 .yellow{color:#ffd000}
 .red{color:#ff4d4d}
 canvas{background:#111;border-radius:10px;padding:10px}
+hr{border:0;border-top:1px solid #333;margin:12px 0}
 </style>
 </head>
 
@@ -32,6 +34,8 @@ canvas{background:#111;border-radius:10px;padding:10px}
 </div>
 
 <button onclick="show('analysis')">📊 Analiza</button>
+<button onclick="show('diet')">🍳 Dieta</button>
+<button onclick="show('training')">🏋️ Trening</button>
 <button onclick="show('checkin')">📝 Niedzielny Check-in</button>
 <button onclick="show('settings')">⚙️ Ustawienia</button>
 
@@ -61,21 +65,89 @@ function updateHome(){
 function show(section){
  let c = document.getElementById("content");
 
+ // ================= ANALIZA =================
  if(section==="analysis"){
-  let analysisHTML = `
+  c.innerHTML = `
   <div class="card">
   <h2>Analiza Redukcji</h2>
   <canvas id="weightChart"></canvas>
   <div id="trend"></div>
   <div id="recommendation"></div>
   </div>`;
-  c.innerHTML = analysisHTML;
   drawChart();
   analyze();
  }
 
+ // ================= DIETA =================
+ if(section==="diet"){
+  c.innerHTML = `
+  <div class="card">
+  <h2>Dieta (2050–2100 kcal)</h2>
+
+  <p><b>09:00</b> – Kuloodporna kawa</p>
+  <p>• kawa + masło / MCT</p>
+
+  <hr>
+
+  <p><b>13:00</b> – Obiad</p>
+  <p>• Pierś z kurczaka 250 g</p>
+  <p>• Brokuły / szparagi</p>
+  <p>• Oliwa</p>
+
+  <hr>
+
+  <p><b>16:30</b> – Kolacja</p>
+  <p>• Twaróg półtłusty</p>
+  <p>• Mascarpone</p>
+  <p>• Masło orzechowe</p>
+
+  <hr>
+
+  <h3>Zasady korekcyjne</h3>
+  <p>• Spadek energii → +5 g masła</p>
+  <p>• Waga stoi 10–14 dni → -100 kcal</p>
+  <p>• Głód → więcej warzyw</p>
+
+  </div>`;
+ }
+
+ // ================= TRENING =================
+ if(section==="training"){
+  c.innerHTML = `
+  <div class="card">
+  <h2>Plan Treningowy</h2>
+
+  <h3>Pon – Trening 1</h3>
+  <a href="https://www.youtube.com/watch?v=L9XBjHDKWC4" target="_blank">Monster walk</a><br>
+  <a href="https://www.youtube.com/watch?v=hQgFixeXdZo" target="_blank">DB RDL</a>
+
+  <hr>
+
+  <h3>Wt – Trening 2</h3>
+  <a href="https://www.youtube.com/watch?v=Z66M-FJMc9U" target="_blank">Dead bug</a><br>
+  <a href="https://www.youtube.com/watch?v=oZVCBM9f8Eo" target="_blank">Incline bench press</a>
+
+  <hr>
+
+  <h3>Śr – Trening 3</h3>
+  <a href="https://www.youtube.com/watch?v=6aLLiik02yU" target="_blank">Goblet squat</a>
+
+  <hr>
+
+  <h3>Czw – Trening 4</h3>
+  <a href="https://www.youtube.com/watch?v=Fv5EYoJfRt4" target="_blank">Incline bench press</a>
+
+  <hr>
+
+  <h3>Pt – Trening 5</h3>
+  <a href="https://www.youtube.com/watch?v=5u1sZFbjPsQ" target="_blank">Staggered RDL</a>
+
+  </div>`;
+ }
+
+ // ================= CHECKIN =================
  if(section==="checkin"){
-  c.innerHTML=`
+  c.innerHTML = `
   <div class="card">
   <h2>Niedzielny Check-in</h2>
   <input id="weight" placeholder="Waga">
@@ -84,8 +156,9 @@ function show(section){
   </div>`;
  }
 
+ // ================= SETTINGS =================
  if(section==="settings"){
-  c.innerHTML=`
+  c.innerHTML = `
   <div class="card">
   <h2>Ustawienia</h2>
   <input id="newCal" placeholder="Nowe kalorie">
@@ -146,8 +219,7 @@ function analyze(){
 
  let last = entries[entries.length-1];
  let prev = entries[entries.length-2];
- let diff = prev.weight - last.weight;
- diff = diff.toFixed(2);
+ let diff = (prev.weight - last.weight).toFixed(2);
 
  let status="";
  let recommendation="";
