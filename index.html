@@ -17,7 +17,7 @@ a{color:#ff7a00;text-decoration:none}
 .green{color:#00ff88}
 .yellow{color:#ffd000}
 .red{color:#ff4d4d}
-canvas{background:#111;border-radius:10px;padding:10px}
+.small{font-size:13px;opacity:0.8}
 hr{border:0;border-top:1px solid #333;margin:12px 0}
 </style>
 </head>
@@ -31,23 +31,22 @@ hr{border:0;border-top:1px solid #333;margin:12px 0}
 <div id="countdown"></div>
 <div id="weightDisplay"></div>
 <div id="calorieDisplay"></div>
+<div id="trainingSummary"></div>
 </div>
 
 <button onclick="show('analysis')">📊 Analiza</button>
 <button onclick="show('diet')">🍳 Dieta</button>
 <button onclick="show('training')">🏋️ Trening</button>
 <button onclick="show('checkin')">📝 Niedzielny Check-in</button>
-<button onclick="show('settings')">⚙️ Ustawienia</button>
 
 <div id="content"></div>
-
-</div>
 
 <script>
 
 let targetDate = new Date("2026-06-10");
 let entries = JSON.parse(localStorage.getItem("p80entries")) || [];
 let calories = localStorage.getItem("p80calories") || 2050;
+let trainings = JSON.parse(localStorage.getItem("p80trainings")) || {};
 
 function updateHome(){
  let today = new Date();
@@ -60,94 +59,110 @@ function updateHome(){
  } else {
    document.getElementById("weightDisplay").innerHTML = "Brak wpisów";
  }
+
+ updateTrainingSummary();
 }
 
 function show(section){
  let c = document.getElementById("content");
 
- // ================= ANALIZA =================
- if(section==="analysis"){
-  c.innerHTML = `
+ // ===== DIETA =====
+ if(section==="diet"){
+  c.innerHTML=`
   <div class="card">
-  <h2>Analiza Redukcji</h2>
+  <h2>Plan żywieniowy (2050 kcal)</h2>
+
+  <h3>🕘 09:00 Śniadanie</h3>
+  <p>Kawa + masło 30g + MCT 10–20g</p>
+  <p class="small">~350 kcal | B:0 | T:40g | W:0</p>
+
+  <b>Zamienniki:</b>
+  <p>• 3–4 jajka + 20g masła</p>
+  <p class="small">~450 kcal | B:28g | T:38g</p>
+
+  <hr>
+
+  <h3>🕐 13:00 Obiad</h3>
+  <p>Kurczak 250g + brokuły 300g + oliwa 20g</p>
+  <p class="small">~650 kcal | B:55g | T:45g | W:10g</p>
+
+  <b>Zamienniki:</b>
+  <p>• Stek 250g</p>
+  <p>• Polędwica wieprzowa 250g</p>
+  <p>• Tatar wołowy 200g</p>
+
+  <hr>
+
+  <h3>🕟 16:30 Kolacja</h3>
+  <p>Twaróg 250g + mascarpone 50g + masło orzechowe 20g</p>
+  <p class="small">~750 kcal | B:65g | T:55g | W:10g</p>
+
+  <b>Zamienniki:</b>
+  <p>• 4 jajka + sałata + oliwa</p>
+  <p>• Halloumi 200g</p>
+
+  <hr>
+
+  <h3>Zasady korekcyjne</h3>
+  <p>• Waga stoi 2 tyg → -100 kcal</p>
+  <p>• Spadek >1kg → +100 kcal</p>
+  <p>• Energia ≤2 → +100 kcal</p>
+
+  </div>`;
+ }
+
+ // ===== TRENING =====
+ if(section==="training"){
+  c.innerHTML=`
+  <div class="card">
+  <h2>Pon – Trening 1</h2>
+  <a href="https://www.youtube.com/watch?v=L9XBjHDKWC4" target="_blank">Monster walk</a><br>
+  <a href="https://www.youtube.com/watch?v=hQgFixeXdZo" target="_blank">DB RDL</a><br>
+  <input type="checkbox" onclick="toggleTraining('pon')"> Zrobione
+  </div>
+
+  <div class="card">
+  <h2>Wt – Trening 2</h2>
+  <a href="https://www.youtube.com/watch?v=Z66M-FJMc9U" target="_blank">Dead bug</a><br>
+  <a href="https://www.youtube.com/watch?v=oZVCBM9f8Eo" target="_blank">Incline BP</a><br>
+  <input type="checkbox" onclick="toggleTraining('wt')"> Zrobione
+  </div>
+
+  <div class="card">
+  <h2>Śr – Trening 3</h2>
+  <a href="https://www.youtube.com/watch?v=6aLLiik02yU" target="_blank">Goblet squat</a><br>
+  <input type="checkbox" onclick="toggleTraining('sr')"> Zrobione
+  </div>
+
+  <div class="card">
+  <h2>Czw – Trening 4</h2>
+  <a href="https://www.youtube.com/watch?v=Fv5EYoJfRt4" target="_blank">Incline BP</a><br>
+  <input type="checkbox" onclick="toggleTraining('czw')"> Zrobione
+  </div>
+
+  <div class="card">
+  <h2>Pt – Trening 5</h2>
+  <a href="https://www.youtube.com/watch?v=5u1sZFbjPsQ" target="_blank">Staggered RDL</a><br>
+  <input type="checkbox" onclick="toggleTraining('pt')"> Zrobione
+  </div>
+  `;
+ }
+
+ // ===== ANALIZA =====
+ if(section==="analysis"){
+  c.innerHTML=`
+  <div class="card">
+  <h2>Analiza</h2>
   <canvas id="weightChart"></canvas>
   <div id="trend"></div>
-  <div id="recommendation"></div>
   </div>`;
   drawChart();
   analyze();
  }
 
- // ================= DIETA =================
- if(section==="diet"){
-  c.innerHTML = `
-  <div class="card">
-  <h2>Dieta (2050–2100 kcal)</h2>
-
-  <p><b>09:00</b> – Kuloodporna kawa</p>
-  <p>• kawa + masło / MCT</p>
-
-  <hr>
-
-  <p><b>13:00</b> – Obiad</p>
-  <p>• Pierś z kurczaka 250 g</p>
-  <p>• Brokuły / szparagi</p>
-  <p>• Oliwa</p>
-
-  <hr>
-
-  <p><b>16:30</b> – Kolacja</p>
-  <p>• Twaróg półtłusty</p>
-  <p>• Mascarpone</p>
-  <p>• Masło orzechowe</p>
-
-  <hr>
-
-  <h3>Zasady korekcyjne</h3>
-  <p>• Spadek energii → +5 g masła</p>
-  <p>• Waga stoi 10–14 dni → -100 kcal</p>
-  <p>• Głód → więcej warzyw</p>
-
-  </div>`;
- }
-
- // ================= TRENING =================
- if(section==="training"){
-  c.innerHTML = `
-  <div class="card">
-  <h2>Plan Treningowy</h2>
-
-  <h3>Pon – Trening 1</h3>
-  <a href="https://www.youtube.com/watch?v=L9XBjHDKWC4" target="_blank">Monster walk</a><br>
-  <a href="https://www.youtube.com/watch?v=hQgFixeXdZo" target="_blank">DB RDL</a>
-
-  <hr>
-
-  <h3>Wt – Trening 2</h3>
-  <a href="https://www.youtube.com/watch?v=Z66M-FJMc9U" target="_blank">Dead bug</a><br>
-  <a href="https://www.youtube.com/watch?v=oZVCBM9f8Eo" target="_blank">Incline bench press</a>
-
-  <hr>
-
-  <h3>Śr – Trening 3</h3>
-  <a href="https://www.youtube.com/watch?v=6aLLiik02yU" target="_blank">Goblet squat</a>
-
-  <hr>
-
-  <h3>Czw – Trening 4</h3>
-  <a href="https://www.youtube.com/watch?v=Fv5EYoJfRt4" target="_blank">Incline bench press</a>
-
-  <hr>
-
-  <h3>Pt – Trening 5</h3>
-  <a href="https://www.youtube.com/watch?v=5u1sZFbjPsQ" target="_blank">Staggered RDL</a>
-
-  </div>`;
- }
-
- // ================= CHECKIN =================
+ // ===== CHECKIN =====
  if(section==="checkin"){
-  c.innerHTML = `
+  c.innerHTML=`
   <div class="card">
   <h2>Niedzielny Check-in</h2>
   <input id="weight" placeholder="Waga">
@@ -156,15 +171,6 @@ function show(section){
   </div>`;
  }
 
- // ================= SETTINGS =================
- if(section==="settings"){
-  c.innerHTML = `
-  <div class="card">
-  <h2>Ustawienia</h2>
-  <input id="newCal" placeholder="Nowe kalorie">
-  <button onclick="saveCal()">Zapisz kalorie</button>
-  </div>`;
- }
 }
 
 function save(){
@@ -179,17 +185,29 @@ function save(){
  alert("Zapisano!");
 }
 
-function saveCal(){
- calories=document.getElementById("newCal").value;
- localStorage.setItem("p80calories",calories);
- updateHome();
- alert("Zapisano!");
+updateHome();
+ 
+function toggleTraining(day){
+ trainings[day] = !trainings[day];
+ localStorage.setItem("p80trainings",JSON.stringify(trainings));
+ updateTrainingSummary();
+}
+
+function updateTrainingSummary(){
+ let count = 0;
+ let days = ["pon","wt","sr","czw","pt"];
+ days.forEach(d=>{
+   if(trainings[d]) count++;
+ });
+ document.getElementById("trainingSummary").innerHTML = "🏋️ Treningi w tym tygodniu: " + count + "/5";
 }
 
 function drawChart(){
  if(entries.length<1) return;
 
  let ctx = document.getElementById("weightChart");
+ if(!ctx) return;
+
  let labels = entries.map(e=>e.date);
  let weights = entries.map(e=>e.weight);
 
@@ -201,7 +219,7 @@ function drawChart(){
        label: 'Waga',
        data: weights,
        borderColor: '#ff3c00',
-       tension: 0.2
+       tension: 0.3
      }]
    },
    options: {
@@ -222,30 +240,25 @@ function analyze(){
  let diff = (prev.weight - last.weight).toFixed(2);
 
  let status="";
- let recommendation="";
 
  if(diff >=0.4 && diff<=0.8){
    status = `<p class="green">🟢 Tempo: -${diff} kg / tydzień (Optymalne)</p>`;
  }
  else if(diff <0.3){
-   status = `<p class="yellow">🟡 Tempo: -${diff} kg (Za wolno)</p>`;
-   recommendation = "<p>Rozważ -100 kcal.</p>";
+   status = `<p class="yellow">🟡 Tempo: -${diff} kg (Za wolno) → -100 kcal</p>`;
  }
  else if(diff >1){
-   status = `<p class="red">🔴 Tempo: -${diff} kg (Za szybko)</p>`;
-   recommendation = "<p>Rozważ +100 kcal.</p>";
+   status = `<p class="red">🔴 Tempo: -${diff} kg (Za szybko) → +100 kcal</p>`;
  }
 
  if(last.energy <=2){
-   recommendation += "<p>⚠ Niska energia – rozważ +100 kcal.</p>";
+   status += `<p class="yellow">⚠ Niska energia → +100 kcal</p>`;
  }
 
  document.getElementById("trend").innerHTML = status;
- document.getElementById("recommendation").innerHTML = recommendation;
 }
 
 updateHome();
-
 </script>
 </body>
 </html>
