@@ -4,68 +4,36 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>P80</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{
-    margin:0;
-    font-family: Arial, sans-serif;
-    background:#111;
-    color:white;
-}
-.container{
-    padding:20px;
-}
-button{
-    width:100%;
-    padding:15px;
-    margin:8px 0;
-    background:#ff3c00;
-    border:none;
-    color:white;
-    font-size:16px;
-    border-radius:8px;
-}
-input{
-    width:100%;
-    padding:10px;
-    margin:5px 0;
-    border-radius:6px;
-    border:none;
-}
-.card{
-    background:#1e1e1e;
-    padding:15px;
-    border-radius:10px;
-    margin-bottom:15px;
-}
-h1{
-    text-align:center;
-}
-.small{
-    font-size:14px;
-    opacity:0.7;
-}
+body{margin:0;font-family:Arial;background:#0f0f0f;color:white}
+.container{padding:20px}
+button{width:100%;padding:14px;margin:6px 0;background:#ff3c00;border:none;color:white;font-size:15px;border-radius:8px}
+input{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:none}
+.card{background:#1c1c1c;padding:15px;border-radius:10px;margin-bottom:12px}
+h1{text-align:center}
+.green{color:#00ff88}
+.yellow{color:#ffd000}
+.red{color:#ff4d4d}
+canvas{background:#111;border-radius:10px;padding:10px}
 </style>
 </head>
 
 <body>
-
 <div class="container">
 
 <h1>P80</h1>
 
 <div class="card">
 <div id="countdown"></div>
-<div id="currentWeight"></div>
-<div id="currentCalories"></div>
+<div id="weightDisplay"></div>
+<div id="calorieDisplay"></div>
 </div>
 
-<button onclick="showSection('diet')">🍳 Dieta</button>
-<button onclick="showSection('training')">🏋️ Trening</button>
-<button onclick="showSection('supplements')">💊 Suplementy</button>
-<button onclick="showSection('checkin')">📊 Check-in</button>
-<button onclick="showSection('stats')">📈 Statystyki</button>
-<button onclick="showSection('settings')">⚙️ Ustawienia</button>
+<button onclick="show('analysis')">📊 Analiza</button>
+<button onclick="show('checkin')">📝 Niedzielny Check-in</button>
+<button onclick="show('settings')">⚙️ Ustawienia</button>
 
 <div id="content"></div>
 
@@ -74,129 +42,138 @@ h1{
 <script>
 
 let targetDate = new Date("2026-06-10");
-let data = JSON.parse(localStorage.getItem("p80data")) || [];
+let entries = JSON.parse(localStorage.getItem("p80entries")) || [];
 let calories = localStorage.getItem("p80calories") || 2050;
 
 function updateHome(){
-    let today = new Date();
-    let diff = Math.ceil((targetDate - today)/(1000*60*60*24));
-    document.getElementById("countdown").innerHTML = "🔥 Do celu: " + diff + " dni";
-    document.getElementById("currentCalories").innerHTML = "Kalorie: " + calories + " kcal";
+ let today = new Date();
+ let diff = Math.ceil((targetDate - today)/(1000*60*60*24));
+ document.getElementById("countdown").innerHTML = "🔥 Do celu: " + diff + " dni";
+ document.getElementById("calorieDisplay").innerHTML = "Kalorie: " + calories + " kcal";
 
-    if(data.length>0){
-        document.getElementById("currentWeight").innerHTML = "Waga: " + data[data.length-1].weight + " kg";
-    } else {
-        document.getElementById("currentWeight").innerHTML = "Brak danych";
-    }
+ if(entries.length>0){
+   document.getElementById("weightDisplay").innerHTML = "Waga: " + entries[entries.length-1].weight + " kg";
+ } else {
+   document.getElementById("weightDisplay").innerHTML = "Brak wpisów";
+ }
 }
 
-function showSection(section){
-    let content = document.getElementById("content");
+function show(section){
+ let c = document.getElementById("content");
 
-    if(section=="diet"){
-        content.innerHTML = `
-        <div class="card">
-        <h2>Dieta</h2>
-        <p>Kalorie: ${calories} kcal</p>
-        <p>Białko: 180g</p>
-        <p>Węgle: <30g</p>
-        </div>`;
-    }
+ if(section==="analysis"){
+  let analysisHTML = `
+  <div class="card">
+  <h2>Analiza Redukcji</h2>
+  <canvas id="weightChart"></canvas>
+  <div id="trend"></div>
+  <div id="recommendation"></div>
+  </div>`;
+  c.innerHTML = analysisHTML;
+  drawChart();
+  analyze();
+ }
 
-    if(section=="training"){
-        content.innerHTML = `
-        <div class="card">
-        <h2>Trening</h2>
-        <p>Pon – Trening 1</p>
-        <p>Wt – Trening 2</p>
-        <p>Śr – Trening 3</p>
-        <p>Czw – Trening 4</p>
-        <p>Pt – Trening 5</p>
-        </div>`;
-    }
+ if(section==="checkin"){
+  c.innerHTML=`
+  <div class="card">
+  <h2>Niedzielny Check-in</h2>
+  <input id="weight" placeholder="Waga">
+  <input id="energy" placeholder="Energia 1-5">
+  <button onclick="save()">Zapisz</button>
+  </div>`;
+ }
 
-    if(section=="supplements"){
-        content.innerHTML = `
-        <div class="card">
-        <h2>Suplementy</h2>
-        <p>08:30 Elektrolity</p>
-        <p>09:00 B12 + Chrom</p>
-        <p>13:00 Omega 3 + D3 + C</p>
-        <p>16:30 Maślan</p>
-        <p>21:00 Magnez</p>
-        </div>`;
-    }
-
-    if(section=="checkin"){
-        content.innerHTML = `
-        <div class="card">
-        <h2>Check-in</h2>
-        <input id="weight" placeholder="Waga">
-        <input id="bf" placeholder="BF%">
-        <input id="ketones" placeholder="Ketony">
-        <input id="energy" placeholder="Energia 1-5">
-        <input id="sleep" placeholder="Sen 1-5">
-        <button onclick="saveCheckin()">Zapisz</button>
-        </div>`;
-    }
-
-    if(section=="stats"){
-        content.innerHTML = `
-        <div class="card">
-        <h2>Statystyki</h2>
-        <p>Liczba wpisów: ${data.length}</p>
-        <button onclick="exportCSV()">Eksport CSV</button>
-        </div>`;
-    }
-
-    if(section=="settings"){
-        content.innerHTML = `
-        <div class="card">
-        <h2>Ustawienia</h2>
-        <input id="newCalories" placeholder="Nowe kalorie">
-        <button onclick="saveCalories()">Zapisz kalorie</button>
-        </div>`;
-    }
+ if(section==="settings"){
+  c.innerHTML=`
+  <div class="card">
+  <h2>Ustawienia</h2>
+  <input id="newCal" placeholder="Nowe kalorie">
+  <button onclick="saveCal()">Zapisz kalorie</button>
+  </div>`;
+ }
 }
 
-function saveCheckin(){
-    let entry = {
-        date: new Date().toISOString().split('T')[0],
-        weight: document.getElementById("weight").value,
-        bf: document.getElementById("bf").value,
-        ketones: document.getElementById("ketones").value,
-        energy: document.getElementById("energy").value,
-        sleep: document.getElementById("sleep").value
-    };
-    data.push(entry);
-    localStorage.setItem("p80data", JSON.stringify(data));
-    updateHome();
-    alert("Zapisano!");
+function save(){
+ let entry={
+  date:new Date().toISOString().split('T')[0],
+  weight:parseFloat(document.getElementById("weight").value),
+  energy:parseInt(document.getElementById("energy").value)
+ };
+ entries.push(entry);
+ localStorage.setItem("p80entries",JSON.stringify(entries));
+ updateHome();
+ alert("Zapisano!");
 }
 
-function saveCalories(){
-    calories = document.getElementById("newCalories").value;
-    localStorage.setItem("p80calories", calories);
-    updateHome();
-    alert("Zapisano!");
+function saveCal(){
+ calories=document.getElementById("newCal").value;
+ localStorage.setItem("p80calories",calories);
+ updateHome();
+ alert("Zapisano!");
 }
 
-function exportCSV(){
-    let csv = "Date,Weight,BF,Ketones,Energy,Sleep\n";
-    data.forEach(e=>{
-        csv += `${e.date},${e.weight},${e.bf},${e.ketones},${e.energy},${e.sleep}\n`;
-    });
+function drawChart(){
+ if(entries.length<1) return;
 
-    let blob = new Blob([csv], {type:"text/csv"});
-    let a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "p80_data.csv";
-    a.click();
+ let ctx = document.getElementById("weightChart");
+ let labels = entries.map(e=>e.date);
+ let weights = entries.map(e=>e.weight);
+
+ new Chart(ctx, {
+   type: 'line',
+   data: {
+     labels: labels,
+     datasets: [{
+       label: 'Waga',
+       data: weights,
+       borderColor: '#ff3c00',
+       tension: 0.2
+     }]
+   },
+   options: {
+     plugins:{legend:{display:false}},
+     scales:{x:{ticks:{color:"white"}},y:{ticks:{color:"white"}}}
+   }
+ });
+}
+
+function analyze(){
+ if(entries.length<2){
+   document.getElementById("trend").innerHTML = "Za mało danych.";
+   return;
+ }
+
+ let last = entries[entries.length-1];
+ let prev = entries[entries.length-2];
+ let diff = prev.weight - last.weight;
+ diff = diff.toFixed(2);
+
+ let status="";
+ let recommendation="";
+
+ if(diff >=0.4 && diff<=0.8){
+   status = `<p class="green">🟢 Tempo: -${diff} kg / tydzień (Optymalne)</p>`;
+ }
+ else if(diff <0.3){
+   status = `<p class="yellow">🟡 Tempo: -${diff} kg (Za wolno)</p>`;
+   recommendation = "<p>Rozważ -100 kcal.</p>";
+ }
+ else if(diff >1){
+   status = `<p class="red">🔴 Tempo: -${diff} kg (Za szybko)</p>`;
+   recommendation = "<p>Rozważ +100 kcal.</p>";
+ }
+
+ if(last.energy <=2){
+   recommendation += "<p>⚠ Niska energia – rozważ +100 kcal.</p>";
+ }
+
+ document.getElementById("trend").innerHTML = status;
+ document.getElementById("recommendation").innerHTML = recommendation;
 }
 
 updateHome();
 
 </script>
-
 </body>
 </html>
