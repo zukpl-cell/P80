@@ -16,7 +16,9 @@ a{color:#ff7a00;text-decoration:none}
 .yellow{color:#ffd000}
 .red{color:#ff4d4d}
 .small{font-size:13px;opacity:0.8}
+details{margin-bottom:10px}
 hr{border:0;border-top:1px solid #333;margin:12px 0}
+input{padding:8px;border-radius:6px;border:none;margin:5px 0;width:100%}
 </style>
 </head>
 
@@ -28,20 +30,22 @@ hr{border:0;border-top:1px solid #333;margin:12px 0}
 <div class="card">
 <div id="summary"></div>
 <div id="trainingSummary"></div>
+<div id="analysisBox"></div>
 </div>
 
 <button onclick="show('analysis')">📊 Analiza</button>
 <button onclick="show('diet')">🍳 Dieta</button>
 <button onclick="show('training')">🏋️ Trening</button>
+<button onclick="show('checkin')">📝 Niedzielny Check-in</button>
 
 <div id="content"></div>
 
 <script>
+// ===== KONFIG =====
+const goal = 80;
 
-// ===== HISTORIA PROJEKTU =====
-let goal = 80;
-
-let entries = [
+// ===== HISTORIA STARTOWA =====
+const baseEntries = [
 {date:"2026-01-01",weight:100},
 {date:"2026-01-07",weight:95.10},
 {date:"2026-01-17",weight:93.25},
@@ -53,88 +57,75 @@ let entries = [
 {date:"2026-03-01",weight:88.65}
 ];
 
+// ===== DANE Z LOCAL STORAGE =====
+let extraEntries = JSON.parse(localStorage.getItem("p80extra")) || [];
 let trainings = JSON.parse(localStorage.getItem("p80trainings")) || {};
+let lastResetWeek = localStorage.getItem("p80week") || "";
 
+// ===== SCALANIE HISTORII =====
+function getAllEntries(){
+  return [...baseEntries, ...extraEntries];
+}
+
+// ===== RESET TRENINGU W PONIEDZIAŁEK =====
+function checkWeeklyReset(){
+  let now = new Date();
+  let week = now.getFullYear()+"-"+getWeekNumber(now);
+  if(lastResetWeek !== week){
+    trainings = {};
+    localStorage.setItem("p80trainings",JSON.stringify(trainings));
+    localStorage.setItem("p80week",week);
+  }
+}
+
+function getWeekNumber(d){
+  d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+  var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+}
+
+// ===== DASHBOARD =====
 function updateSummary(){
- let start = entries[0].weight;
- let current = entries[entries.length-1].weight;
- let lost = (start-current).toFixed(2);
- let percent = ((lost/(start-goal))*100).toFixed(1);
+  let entries = getAllEntries();
+  let start = entries[0].weight;
+  let current = entries[entries.length-1].weight;
+  let lost = (start-current).toFixed(2);
+  let percent = ((lost/(start-goal))*100).toFixed(1);
 
- document.getElementById("summary").innerHTML = `
- <b>Start:</b> ${start} kg<br>
- <b>Aktualnie:</b> ${current} kg<br>
- <b>Spadek:</b> ${lost} kg<br>
- <b>Realizacja celu:</b> ${percent}%`;
- updateTrainingSummary();
+  document.getElementById("summary").innerHTML = `
+  <b>Start:</b> ${start} kg<br>
+  <b>Aktualnie:</b> ${current} kg<br>
+  <b>Spadek:</b> ${lost} kg<br>
+  <b>Realizacja celu:</b> ${percent}%`;
+  updateTrainingSummary();
+  updateWeeklyAnalysis();
 }
 
-function show(section){
- let c=document.getElementById("content");
+// ===== ANALIZA TYGODNIOWA =====
+function updateWeeklyAnalysis(){
+  let entries = getAllEntries();
+  if(entries.length<2){
+    document.getElementById("analysisBox").innerHTML="";
+    return;
+  }
+  let last = entries[entries.length-1];
+  let prev = entries[entries.length-2];
+  let diff = (prev.weight - last.weight).toFixed(2);
 
- if(section==="analysis"){
-  c.innerHTML=`<div class="card"><canvas id="chart"></canvas></div>`;
-  drawChart();
- }
+  let text="";
+  if(diff >=0.4 && diff<=0.8){
+    text=`<span class="green">🟢 Tempo: -${diff} kg / tydzień</span>`;
+  }else if(diff<0.3){
+    text=`<span class="yellow">🟡 Tempo: -${diff} kg → rozważ -100 kcal</span>`;
+  }else if(diff>1){
+    text=`<span class="red">🔴 Tempo: -${diff} kg → rozważ +100 kcal</span>`;
+  }
 
- if(section==="diet"){
-  c.innerHTML=`
-  <div class="card">
-  <h2>Plan (2050 kcal)</h2>
-
-  <h3>09:00</h3>
-  Kawa + masło 30g + MCT<br>
-  <span class="small">350 kcal</span>
-
-  <hr>
-
-  <h3>13:00</h3>
-  Kurczak 250g + brokuły 300g + oliwa 20g<br>
-  <span class="small">650 kcal</span>
-
-  <hr>
-
-  <h3>16:30</h3>
-  Twaróg 250g + mascarpone 50g + masło orzechowe 20g<br>
-  <span class="small">750 kcal</span>
-
-  </div>`;
- }
-
- if(section==="training"){
-  c.innerHTML=`
-  ${trainingCard("Pon","pon",`
-  <a href="https://www.youtube.com/watch?v=L9XBjHDKWC4" target="_blank">Monster walk</a><br>
-  <a href="https://www.youtube.com/watch?v=hQgFixeXdZo" target="_blank">DB RDL</a>
-  `)}
-  ${trainingCard("Wt","wt",`
-  <a href="https://www.youtube.com/watch?v=Z66M-FJMc9U" target="_blank">Dead bug</a><br>
-  <a href="https://www.youtube.com/watch?v=oZVCBM9f8Eo" target="_blank">Incline BP</a>
-  `)}
-  ${trainingCard("Śr","sr",`
-  <a href="https://www.youtube.com/watch?v=6aLLiik02yU" target="_blank">Goblet squat</a>
-  `)}
-  ${trainingCard("Czw","czw",`
-  <a href="https://www.youtube.com/watch?v=Fv5EYoJfRt4" target="_blank">Incline BP</a>
-  `)}
-  ${trainingCard("Pt","pt",`
-  <a href="https://www.youtube.com/watch?v=5u1sZFbjPsQ" target="_blank">Staggered RDL</a>
-  `)}
-  `;
- }
+  document.getElementById("analysisBox").innerHTML=text;
 }
 
-function trainingCard(title,key,content){
- return `
- <div class="card">
- <h2>${title}</h2>
- ${content}
- <br>
- <input type="checkbox" ${trainings[key]?"checked":""}
- onclick="toggleTraining('${key}')"> Zrobione
- </div>`;
-}
-
+// ===== TRENING =====
 function toggleTraining(day){
  trainings[day]=!trainings[day];
  localStorage.setItem("p80trainings",JSON.stringify(trainings));
@@ -149,8 +140,11 @@ function updateTrainingSummary(){
  document.getElementById("trainingSummary").innerHTML="🏋️ Treningi w tym tygodniu: "+count+"/5";
 }
 
+// ===== WYKRES =====
 function drawChart(){
  let ctx=document.getElementById("chart");
+ if(!ctx) return;
+ let entries = getAllEntries();
  new Chart(ctx,{
  type:'line',
  data:{
@@ -161,13 +155,142 @@ function drawChart(){
    tension:0.3
   }]
  },
- options:{
-  plugins:{legend:{display:false}},
-  scales:{x:{ticks:{color:"white"}},y:{ticks:{color:"white"}}}
- }
+ options:{plugins:{legend:{display:false}},
+ scales:{x:{ticks:{color:"white"}},y:{ticks:{color:"white"}}}}
  });
 }
 
+// ===== CHECKIN =====
+function saveCheckin(){
+ let w = parseFloat(document.getElementById("weight").value);
+ let k = document.getElementById("ketones").value;
+ let e = document.getElementById("energy").value;
+ if(!w) return;
+ extraEntries.push({date:new Date().toISOString().split("T")[0],weight:w,ketones:k,energy:e});
+ localStorage.setItem("p80extra",JSON.stringify(extraEntries));
+ location.reload();
+}
+
+// ===== WYŚWIETLANIE SEKCJI =====
+function show(section){
+ let c=document.getElementById("content");
+
+ if(section==="analysis"){
+  c.innerHTML=`<div class="card"><canvas id="chart"></canvas></div>`;
+  drawChart();
+ }
+
+ if(section==="diet"){
+  c.innerHTML=`
+  <div class="card">
+  <h2>📅 IF 9:00–17:00 (1900 kcal)</h2>
+
+  <details><summary>🕘 09:00 Śniadanie (~200 kcal)</summary>
+  Masło 15 g + MCT 10 g<br>
+  <b>Zamienniki:</b><br>
+  2 jajka + masło 10 g<br>
+  Jogurt grecki 200 g + orzechy 20 g<br>
+  Halloumi 80 g + oliwa 10 g
+  </details>
+
+  <details><summary>🕐 13:00 Obiad (~720 kcal)</summary>
+  Kurczak 300 g + brokuł 300 g + oliwa 25 g<br>
+  <b>Zamienniki:</b><br>
+  Polędwica / indyk / cielęcina / chuda wołowina<br>
+  Baby brokuł / cukinia / kalafior / fasolka / szpinak
+  </details>
+
+  <details><summary>🕟 16:30 Kolacja (~980 kcal)</summary>
+  Twaróg 300 g + mascarpone 60 g + masło orzechowe 20 g<br>
+  <b>Zamienniki:</b><br>
+  4 jajka + ser żółty 80 g + oliwa 15 g<br>
+  Wołowina 250 g + ser 60 g + oliwa 10 g<br>
+  Jogurt 400 g + mascarpone 60 g + orzechy 20 g
+  </details>
+
+  <hr>
+  <h3>💊 Suplementacja</h3>
+  9:00 – B12, Chrom, Elektrolity, Kreatyna<br>
+  13:00 – Omega-3, D3+K2, C, Żelazo<br>
+  16:30 – Maślan sodu<br>
+  21:00 – Magnez
+  </div>`;
+ }
+
+ if(section==="training"){
+  c.innerHTML=`
+  ${trainingDay("Poniedziałek","pon",`
+  Monster walk 3x15/str<br>
+  DB RDL 3x12<br>
+  Single leg quad extension 4x8/leg<br>
+  Goblet cossacks 3x6/leg<br>
+  Single leg ham curl 3x10/leg<br>
+  Hip thrust 3x10/leg`)}
+
+  ${trainingDay("Wtorek","wt",`
+  Dead bug 3x6/leg<br>
+  Glute bridge 3x12/leg<br>
+  Side plank 3xMax<br>
+  DB press 3x10<br>
+  Reverse fly 3x10<br>
+  Incline bench 4x8<br>
+  Row 3x10<br>
+  Lateral raise 3x10<br>
+  Swiss ball dead bug 3xAMRAP`)}
+
+  ${trainingDay("Środa","sr",`
+  Cossacks 3x8<br>
+  Monster walk 3x15<br>
+  Goblet squat 4x10<br>
+  Glute bridge 4x10<br>
+  Ham curl 4x10<br>
+  Superman 4xMax`)}
+
+  ${trainingDay("Czwartek","czw",`
+  Cuban press 3x15<br>
+  Zgięcia z piłką 3x15<br>
+  Incline bench 4x10<br>
+  Row 4x10<br>
+  Superman 4x10<br>
+  Poliquin step up 4x15`)}
+
+  ${trainingDay("Piątek","pt",`
+  Staggered RDL 3x10<br>
+  Brzuch 4x5+5<br>
+  Przysiady na palcach 4x5<br>
+  Gorilla row 4x20<br>
+  Superman 4xMax<br>
+  Pallof rotation 4x10<br>
+  Incline bench 4x10`)}
+  `;
+ }
+
+ if(section==="checkin"){
+  c.innerHTML=`
+  <div class="card">
+  <h2>Niedzielny Check-in</h2>
+  <input id="weight" placeholder="Waga">
+  <input id="ketones" placeholder="Ketony">
+  <input id="energy" placeholder="Energia 1-5">
+  <button onclick="saveCheckin()">Zapisz</button>
+  </div>`;
+ }
+}
+
+function trainingDay(title,key,content){
+ return `
+ <details>
+ <summary>${title}</summary>
+ <div class="card">
+ ${content}<br>
+ <input type="checkbox" ${trainings[key]?"checked":""}
+ onclick="toggleTraining('${key}')"> Zrobione
+ </div>
+ </details>`;
+}
+
+// ===== INIT =====
+checkWeeklyReset();
 updateSummary();
 
 </script>
