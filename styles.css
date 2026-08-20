@@ -212,6 +212,31 @@ p { line-height: 1.48; }
 .recent-item p, .history-item p { margin: 3px 0 0; color: var(--muted); font-size: .75rem; }
 .empty-state { padding: 25px 12px; color: var(--muted); text-align: center; font-size: .84rem; }
 
+.weekly-summary-card { border-color: rgba(85, 167, 255, .25); }
+.weekly-summary-card .card-title-row { align-items: flex-start; }
+.weekly-summary-card h3 { margin: 5px 0 0; font-size: 1.25rem; }
+.weekly-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 0;
+}
+.weekly-stat {
+  min-width: 0;
+  padding: 10px;
+  background: #101318;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+}
+.weekly-stat span { display: block; color: var(--muted); font-size: .65rem; }
+.weekly-stat strong { display: block; overflow-wrap: anywhere; margin-top: 5px; font-size: .86rem; }
+.weekly-details { color: var(--muted); font-size: .81rem; line-height: 1.5; }
+.weekly-details h4 { margin: 14px 0 5px; color: var(--text); font-size: .8rem; }
+.weekly-details p { margin: 0; }
+.weekly-details ul { margin: 5px 0 0; padding-left: 18px; }
+.weekly-details li + li { margin-top: 4px; }
+.weekly-summary-card .secondary-button { margin-top: 16px; }
+
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
 label { display: block; color: #c8ced8; font-size: .76rem; font-weight: 700; }
 input, textarea, select {
@@ -342,6 +367,7 @@ dialog::backdrop { background: rgba(0, 0, 0, .75); backdrop-filter: blur(5px); }
   .date-control { width: 132px; }
   .notice { align-items: flex-start; }
   .exercise-row { grid-template-columns: 22px minmax(0, 1fr) 50px 50px 60px; gap: 5px; padding: 8px 6px; }
+  .weekly-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (prefers-reduced-motion: reduce) {

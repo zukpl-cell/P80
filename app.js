@@ -58,6 +58,7 @@
 
   const state = {
     reports: [],
+    weeklySummaries: [],
     currentReport: null,
     currentDate: localDateKey(new Date()),
     supabase: null,
@@ -68,6 +69,7 @@
     pendingEntryFile: null,
     pendingIngredients: [],
     pendingWeightFile: null,
+    weeklyLoading: false,
     installPrompt: null
   };
 
@@ -101,7 +103,9 @@
       "ketoYes", "ketoNo", "turningPoint", "correction", "reportCompleteConfirmed",
       "validationBox", "saveDraftButton", "closeReportButton", "evaluationCard",
       "evaluationVerdict", "evaluationHeadline", "evaluationDetails", "historyStats",
-      "historyList", "exportButton", "weeklyPlan", "cloudStatus", "authCard",
+      "historyList", "exportButton", "weeklySummaryCard", "weeklyPeriod", "weeklyVerdict",
+      "weeklyStats", "weeklyHeadline", "weeklyDetails", "generateWeeklyButton", "weeklyStatus",
+      "weeklyPlan", "cloudStatus", "authCard",
       "authEmail", "authPassword", "loginButton", "setPasswordButton", "magicLinkButton",
       "logoutButton", "authMessage", "installButton",
       "entryDialog", "entryForm", "entryDialogTitle", "closeEntryDialog", "entryId",
@@ -130,6 +134,7 @@
     el.saveDraftButton.addEventListener("click", () => saveDraft(true));
     el.closeReportButton.addEventListener("click", closeReport);
     el.exportButton.addEventListener("click", exportReports);
+    el.generateWeeklyButton.addEventListener("click", () => generateLatestWeeklySummary(true));
     el.loginButton.addEventListener("click", loginWithPassword);
     el.setPasswordButton.addEventListener("click", setAccountPassword);
     el.magicLinkButton.addEventListener("click", loginWithMagicLink);
@@ -178,9 +183,11 @@
       state.supabase.auth.onAuthStateChange(async (_event, session) => {
         const previousUser = state.user?.id;
         state.user = session?.user || null;
+        if (!state.user) state.weeklySummaries = [];
         if (state.user && state.user.id !== previousUser) {
           await migrateLocalReportsToCloud();
           await loadCloudReports();
+          await loadWeeklySummaries();
         }
         renderAll();
       });
@@ -188,6 +195,7 @@
       if (state.user) {
         await migrateLocalReportsToCloud();
         await loadCloudReports();
+        await loadWeeklySummaries();
       }
     } catch (error) {
       console.error(error);
@@ -243,6 +251,29 @@
       closed: Boolean(row.closed_at || row.data?.closed)
     }));
     saveLocalReports();
+  }
+
+  async function loadWeeklySummaries() {
+    if (!state.supabase || !state.user) return;
+    const { data, error } = await state.supabase
+      .from("weekly_summaries")
+      .select("id, week_start_date, week_end_date, period_days, verdict, stats, summary, updated_at")
+      .order("week_end_date", { ascending: false });
+    if (error) {
+      console.warn("Weekly summaries:", error.message);
+      state.weeklySummaries = [];
+      return;
+    }
+    state.weeklySummaries = (data || []).map(row => ({
+      id: row.id,
+      weekStartDate: row.week_start_date,
+      weekEndDate: row.week_end_date,
+      periodDays: row.period_days,
+      verdict: row.verdict,
+      stats: row.stats || {},
+      summary: row.summary || {},
+      updatedAt: row.updated_at
+    }));
   }
 
   async function migrateLocalReportsToCloud() {
@@ -857,7 +888,7 @@
       if (state.cloudReady && state.user && state.supabase) {
         try {
           const { data, error } = await state.supabase.functions.invoke(CONFIG.edgeFunctionName || "analyze-report", {
-            body: { report: sanitizeReport(report, true), project: PROJECT, hardChecks: hardEvaluation }
+            body: { mode: "daily", report: sanitizeReport(report, true), project: PROJECT, hardChecks: hardEvaluation }
           });
           if (error) throw error;
           if (data?.evaluation) evaluation = enforceHardChecks(data.evaluation, hardEvaluation);
@@ -872,6 +903,10 @@
       report.evaluation = evaluation;
       report.verdict = evaluation.verdict;
       await persistReport(report);
+      if (parseLocalDate(report.date).getDay() === 0 && state.cloudReady && state.user) {
+        el.closeReportButton.textContent = "Podsumowuję tydzień…";
+        await generateWeeklySummary(report.date, false);
+      }
       renderEvaluation(report);
       setReportLocked(true);
       renderAll();
@@ -1065,6 +1100,8 @@
       <article class="metric-card"><span>Seria</span><strong>${calculateStreak(reports)}</strong><small>dni z rzędu</small></article>
     `;
 
+    renderWeeklySummary();
+
     if (!reports.length) {
       el.historyList.innerHTML = '<div class="empty-state">Nie ma jeszcze raportów.</div>';
       return;
@@ -1081,6 +1118,121 @@
     el.historyList.querySelectorAll("[data-open-date]").forEach(button => {
       button.addEventListener("click", () => openReport(button.dataset.openDate));
     });
+  }
+
+  function renderWeeklySummary() {
+    const latest = [...state.weeklySummaries].sort((a, b) => b.weekEndDate.localeCompare(a.weekEndDate))[0];
+    const latestClosed = [...state.reports].filter(report => report.closed).sort((a, b) => b.date.localeCompare(a.date))[0];
+    el.generateWeeklyButton.hidden = !state.user || !latestClosed;
+    el.generateWeeklyButton.disabled = state.weeklyLoading;
+    el.generateWeeklyButton.textContent = state.weeklyLoading
+      ? "Analizuję…"
+      : latest
+      ? "Przelicz podsumowanie"
+      : "Wygeneruj podsumowanie teraz";
+
+    if (!latest) {
+      el.weeklyPeriod.textContent = "PODSUMOWANIE TYGODNIA";
+      el.weeklyVerdict.textContent = "Oczekuje na pierwszy okres";
+      el.weeklyVerdict.className = "verdict-neutral";
+      el.weeklyStats.innerHTML = "";
+      el.weeklyHeadline.textContent = "Po zamknięciu niedzielnego raportu P80 automatycznie przeanalizuje ostatnie siedem dni.";
+      el.weeklyDetails.innerHTML = "";
+      if (!state.weeklyLoading) {
+        el.weeklyStatus.textContent = state.user
+          ? "Możesz utworzyć podsumowanie po zamknięciu pierwszego raportu."
+          : "Zaloguj się, aby uruchomić analizę AI.";
+      }
+      return;
+    }
+
+    const stats = latest.stats || {};
+    const summary = latest.summary || {};
+    const delivered = latest.verdict === "DOWIEZIONE";
+    const periodLabel = summary.period_label || (latest.periodDays === 7 ? "TYDZIEŃ" : `OKRES STARTOWY · ${latest.periodDays} DNI`);
+    el.weeklyPeriod.textContent = `${periodLabel} · ${formatShortDate(latest.weekStartDate)}–${formatShortDate(latest.weekEndDate)}`;
+    el.weeklyVerdict.textContent = delivered ? "DOWIEZIONE" : "NIEDOWIEZIONE";
+    el.weeklyVerdict.className = delivered ? "verdict-success" : "verdict-danger";
+    el.weeklyStats.innerHTML = [
+      ["Dni", `${numberFormat(stats.deliveredDays, 0)}/${numberFormat(stats.expectedDays, 0)}`],
+      ["Śr. kcal", stats.averageCalories === null || stats.averageCalories === undefined ? "—" : numberFormat(stats.averageCalories, 0)],
+      ["Keto", `${numberFormat(stats.ketoDays, 0)}/${numberFormat(stats.closedDays, 0)}`],
+      ["Masa", formatWeightChange(stats.weightChange)],
+      ["Rower", `${numberFormat(stats.totalBikeKm, 1)} km`],
+      ["Sen", stats.averageSleep === null || stats.averageSleep === undefined ? "—" : `${numberFormat(stats.averageSleep, 1)} h`]
+    ].map(([label, value]) => `<div class="weekly-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
+    el.weeklyHeadline.textContent = summary.headline || "";
+    el.weeklyDetails.innerHTML = `
+      ${summary.summary ? `<p>${escapeHtml(summary.summary)}</p>` : ""}
+      ${renderWeeklyList("Dowiezione", summary.wins)}
+      ${renderWeeklyList("Niedowiezienie", summary.failures)}
+      ${summary.pattern ? `<h4>Wzorzec</h4><p>${escapeHtml(summary.pattern)}</p>` : ""}
+      ${summary.correction ? `<h4>Korekta</h4><p>${escapeHtml(summary.correction)}</p>` : ""}
+      ${renderWeeklyList("Priorytety następnego tygodnia", summary.next_week_focus)}
+      ${summary.safety_note ? `<h4>Bezpieczeństwo</h4><p>${escapeHtml(summary.safety_note)}</p>` : ""}
+    `;
+    if (!state.weeklyLoading) {
+      el.weeklyStatus.textContent = `Aktualizacja: ${formatDateTime(latest.updatedAt)}`;
+    }
+  }
+
+  function renderWeeklyList(title, items) {
+    if (!Array.isArray(items) || !items.length) return "";
+    return `<h4>${escapeHtml(title)}</h4><ul>${items.map(item => `<li>${escapeHtml(String(item))}</li>`).join("")}</ul>`;
+  }
+
+  function formatWeightChange(value) {
+    if (value === null || value === undefined || !Number.isFinite(Number(value))) return "—";
+    const numeric = Number(value);
+    return `${numeric > 0 ? "+" : numeric < 0 ? "−" : ""}${numberFormat(Math.abs(numeric), 2)} kg`;
+  }
+
+  async function generateLatestWeeklySummary(notify = true) {
+    const latestClosed = [...state.reports].filter(report => report.closed).sort((a, b) => b.date.localeCompare(a.date))[0];
+    if (!latestClosed) {
+      el.weeklyStatus.textContent = "Najpierw zamknij przynajmniej jeden raport dnia.";
+      return false;
+    }
+    return generateWeeklySummary(latestClosed.date, notify);
+  }
+
+  async function generateWeeklySummary(weekEndDate, notify = true) {
+    if (!state.supabase || !state.user || state.weeklyLoading) return false;
+    state.weeklyLoading = true;
+    el.weeklyStatus.textContent = "Analizuję raporty i zapisuję podsumowanie…";
+    renderWeeklySummary();
+    let finalStatus = "";
+
+    try {
+      const { data, error } = await state.supabase.functions.invoke(CONFIG.edgeFunctionName || "analyze-report", {
+        body: { mode: "weekly", weekEndDate, project: PROJECT }
+      });
+      if (error) throw error;
+      if (!data?.summary) throw new Error("Brak podsumowania");
+
+      const record = {
+        weekStartDate: data.weekStartDate,
+        weekEndDate: data.weekEndDate,
+        periodDays: data.periodDays,
+        verdict: data.verdict,
+        stats: data.stats || {},
+        summary: data.summary || {},
+        updatedAt: new Date().toISOString()
+      };
+      state.weeklySummaries = [record, ...state.weeklySummaries.filter(item => item.weekEndDate !== record.weekEndDate)];
+      finalStatus = "Podsumowanie zapisane w chmurze.";
+      if (notify) showToast("Podsumowanie okresu jest gotowe.");
+      return true;
+    } catch (error) {
+      console.error(error);
+      finalStatus = "Nie udało się uruchomić analizy AI. Raporty pozostają bezpiecznie zapisane.";
+      if (notify) showToast("Analiza AI niedostępna — sprawdź funkcję i rozliczenie API.");
+      return false;
+    } finally {
+      state.weeklyLoading = false;
+      renderWeeklySummary();
+      el.weeklyStatus.textContent = finalStatus;
+    }
   }
 
   function renderStaticPlan() {
@@ -1125,7 +1277,7 @@
       <div class="status-line"><span>Konfiguracja Supabase</span><strong>${configured ? "gotowa" : "oczekuje"}</strong></div>
       <div class="status-line"><span>Użytkownik</span><strong>${loggedIn ? escapeHtml(state.user.email || "zalogowany") : "niezalogowany"}</strong></div>
       <div class="status-line"><span>Zdjęcia prywatne</span><strong>${loggedIn ? "aktywne" : "lokalne"}</strong></div>
-      <div class="status-line"><span>Werdykt AI</span><strong>${loggedIn ? "gotowy po wdrożeniu funkcji" : "reguły lokalne"}</strong></div>
+      <div class="status-line"><span>Analiza AI</span><strong>${loggedIn ? "dzienna + tygodniowa" : "reguły lokalne"}</strong></div>
     `;
     if (!configured) {
       el.authMessage.textContent = "Najpierw uzupełnij config.js zgodnie z instrukcją SUPABASE_SETUP.md.";
@@ -1194,6 +1346,7 @@
     if (!state.supabase) return;
     await state.supabase.auth.signOut();
     state.user = null;
+    state.weeklySummaries = [];
     renderAll();
   }
 
@@ -1209,7 +1362,8 @@
     const payload = {
       exportedAt: new Date().toISOString(),
       project: PROJECT,
-      reports: state.reports.map(sanitizeReport)
+      reports: state.reports.map(sanitizeReport),
+      weeklySummaries: state.weeklySummaries
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const link = document.createElement("a");
@@ -1236,7 +1390,7 @@
         window.location.reload();
       });
       navigator.serviceWorker
-        .register("./sw.js?v=6", { updateViaCache: "none" })
+        .register("./sw.js?v=7", { updateViaCache: "none" })
         .then(registration => registration.update())
         .catch(error => console.warn("Service worker:", error));
     }

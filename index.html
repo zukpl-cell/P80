@@ -8,11 +8,11 @@
   <title>P80 — Projekt 80 kg</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=6">
+  <link rel="stylesheet" href="./styles.css?v=7">
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="./config.js?v=6"></script>
-  <script defer src="./app.js?v=6"></script>
+  <script defer src="./config.js?v=7"></script>
+  <script defer src="./app.js?v=7"></script>
 </head>
 <body>
   <header class="topbar">
@@ -297,6 +297,20 @@
         </div>
         <button id="exportButton" class="secondary-button compact" type="button">Eksport JSON</button>
       </div>
+      <article id="weeklySummaryCard" class="card weekly-summary-card">
+        <div class="card-title-row">
+          <div>
+            <p id="weeklyPeriod" class="eyebrow">PODSUMOWANIE TYGODNIA</p>
+            <h3 id="weeklyVerdict">Oczekuje na dane</h3>
+          </div>
+          <span class="badge badge-muted">AI</span>
+        </div>
+        <div id="weeklyStats" class="weekly-stats"></div>
+        <p id="weeklyHeadline" class="evaluation-headline"></p>
+        <div id="weeklyDetails" class="weekly-details"></div>
+        <button id="generateWeeklyButton" class="secondary-button" type="button" hidden>Wygeneruj podsumowanie teraz</button>
+        <div id="weeklyStatus" class="inline-message" aria-live="polite"></div>
+      </article>
       <div id="historyStats" class="metrics-grid compact-grid"></div>
       <div id="historyList" class="history-list"></div>
     </section>
