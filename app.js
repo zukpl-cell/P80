@@ -98,9 +98,9 @@
       "weightPhoto", "weightPhotoPreview", "addEntryButton", "entriesList", "calorieSum",
       "allFoodConfirmed", "gymPlanBadge", "homeMinutes", "gymMinutes", "bikeKm",
       "bikeMinutes", "steps", "gymSession", "gymExercisesPanel", "gymExercisesList",
-      "trainingNotes", "sleepHours", "hunger", "mood", "difficultMoment", "wellbeingNotes",
+      "recoveryDay", "trainingNotes", "sleepHours", "hunger", "mood", "difficultMoment", "wellbeingNotes",
       "ketoYes", "ketoNo", "turningPoint", "reportCompleteConfirmed",
-      "validationBox", "saveDraftButton", "closeReportButton", "evaluationCard",
+      "validationBox", "saveDraftButton", "closeReportButton", "evaluationCard", "reopenReportButton",
       "evaluationVerdict", "evaluationHeadline", "evaluationDetails", "historyStats",
       "historyList", "exportButton", "weeklySummaryCard", "weeklyPeriod", "weeklyVerdict",
       "weeklyStats", "weeklyHeadline", "weeklyDetails", "generateWeeklyButton", "weeklyStatus",
@@ -132,6 +132,7 @@
     el.gymSession.addEventListener("change", () => renderGymExercises(el.gymSession.value));
     el.saveDraftButton.addEventListener("click", () => saveDraft(true));
     el.closeReportButton.addEventListener("click", closeReport);
+    el.reopenReportButton.addEventListener("click", reopenCurrentReport);
     el.exportButton.addEventListener("click", exportReports);
     el.generateWeeklyButton.addEventListener("click", () => generateLatestWeeklySummary(true));
     el.loginButton.addEventListener("click", loginWithPassword);
@@ -377,6 +378,7 @@
       bikeMinutes: 0,
       steps: 0,
       trainingNotes: "",
+      recoveryDay: false,
       sleepHours: null,
       hunger: null,
       mood: null,
@@ -405,6 +407,7 @@
       steps: numberOrZero(report.steps),
       allFoodConfirmed: Boolean(report.allFoodConfirmed),
       reportCompleteConfirmed: Boolean(report.reportCompleteConfirmed),
+      recoveryDay: Boolean(report.recoveryDay),
       closed: Boolean(report.closed)
     };
     delete normalized.painMorning;
@@ -463,6 +466,7 @@
     el.bikeMinutes.value = numberOrZero(report.bikeMinutes);
     el.steps.value = numberOrZero(report.steps);
     el.trainingNotes.value = report.trainingNotes || "";
+    el.recoveryDay.checked = Boolean(report.recoveryDay);
     el.sleepHours.value = valueOrBlank(report.sleepHours);
     el.hunger.value = valueOrBlank(report.hunger);
     el.mood.value = valueOrBlank(report.mood);
@@ -492,6 +496,7 @@
     report.bikeMinutes = numberOrZero(el.bikeMinutes.value);
     report.steps = numberOrZero(el.steps.value);
     report.trainingNotes = el.trainingNotes.value.trim();
+    report.recoveryDay = el.recoveryDay.checked;
     report.sleepHours = numberOrNull(el.sleepHours.value);
     report.hunger = numberOrNull(el.hunger.value);
     report.mood = numberOrNull(el.mood.value);
@@ -867,6 +872,7 @@
     if (report.sleepHours === null) errors.push("Brak liczby godzin snu.");
     if (report.hunger === null) errors.push("Brak poziomu głodu.");
     if (report.mood === null) errors.push("Brak oceny samopoczucia.");
+    if (report.recoveryDay && !report.trainingNotes) errors.push("Dzień regeneracyjny wymaga podania powodu w notatce treningowej.");
     if (!report.difficultMoment) errors.push("Nie opisano trudnego momentu dnia.");
     if (!report.keto) errors.push("Nie zaznaczono, czy utrzymano keto.");
     if (!report.reportCompleteConfirmed) errors.push("Nie potwierdzono kompletności raportu.");
@@ -925,23 +931,26 @@
 
   function deterministicEvaluation(report) {
     const violations = [];
+    const warnings = [];
     const calories = totalCalories(report);
     const gymPlanned = PROJECT.gymDays.includes(parseLocalDate(report.date).getDay());
     const expectedSession = expectedGymSession(report.date);
 
     if (calories > PROJECT.calorieTarget) violations.push(`Przekroczono limit ${PROJECT.calorieTarget} kcal: wpisano ${numberFormat(calories, 0)} kcal.`);
-    if (calories < PROJECT.calorieFloor) violations.push(`Kaloryczność ${numberFormat(calories, 0)} kcal jest poniżej bezpiecznego zakresu projektu ${PROJECT.calorieFloor}–${PROJECT.calorieTarget} kcal.`);
+    if (calories < PROJECT.calorieFloor) warnings.push(`Kaloryczność ${numberFormat(calories, 0)} kcal jest poniżej docelowego zakresu ${PROJECT.calorieFloor}–${PROJECT.calorieTarget} kcal. Nie zmienia to werdyktu, ale nie powinno powtarzać się regularnie.`);
     if (report.keto !== "yes") violations.push("Nie utrzymano keto.");
-    if (report.homeMinutes < PROJECT.homeMinutesMin) violations.push(`Trening domowy krótszy niż ${PROJECT.homeMinutesMin} minut.`);
-    if (report.bikeKm < PROJECT.bikeKmMin) violations.push(`Rower poniżej planu ${PROJECT.bikeKmMin} km.`);
-    if (gymPlanned && report.gymMinutes <= 0) violations.push("Nie wykonano zaplanowanej siłowni.");
-    if (gymPlanned && !report.gymSession) violations.push("Nie wskazano sesji siłowni A/B/C.");
-    if (gymPlanned && report.gymSession && report.gymSession !== expectedSession) violations.push(`Wykonano plan ${report.gymSession} zamiast zaplanowanego planu ${expectedSession}.`);
-    if (gymPlanned && report.gymSession && (report.gymExercises || []).some(item => !item.done)) {
-      violations.push("Nie wykonano wszystkich ćwiczeń zaplanowanej sesji siłowni.");
-    }
-    if (gymPlanned && report.gymSession && (report.gymExercises || []).some(item => item.done && (item.sets === null || !item.reps || item.load === null))) {
-      violations.push("Nie wpisano kompletu serii, powtórzeń i obciążeń dla wykonanych ćwiczeń.");
+    const movementIssues = [];
+    if (report.homeMinutes < PROJECT.homeMinutesMin) movementIssues.push(`Trening domowy krótszy niż ${PROJECT.homeMinutesMin} minut.`);
+    if (report.bikeKm < PROJECT.bikeKmMin) movementIssues.push(`Rower poniżej planu ${PROJECT.bikeKmMin} km.`);
+    if (gymPlanned && report.gymMinutes <= 0) movementIssues.push("Nie wykonano zaplanowanej siłowni.");
+    if (gymPlanned && !report.gymSession) movementIssues.push("Nie wskazano sesji siłowni A/B/C.");
+    if (gymPlanned && report.gymSession && report.gymSession !== expectedSession) movementIssues.push(`Wykonano plan ${report.gymSession} zamiast zaplanowanego planu ${expectedSession}.`);
+    if (gymPlanned && report.gymSession && (report.gymExercises || []).some(item => !item.done)) movementIssues.push("Nie wykonano wszystkich ćwiczeń zaplanowanej sesji siłowni.");
+    if (gymPlanned && report.gymSession && (report.gymExercises || []).some(item => item.done && (item.sets === null || !item.reps || item.load === null))) movementIssues.push("Nie wpisano kompletu serii, powtórzeń i obciążeń dla wykonanych ćwiczeń.");
+    if (report.recoveryDay) {
+      if (movementIssues.length) warnings.push(`Ruch ograniczony w uzasadnionym dniu regeneracyjnym: ${movementIssues.join(" ")}`);
+    } else {
+      violations.push(...movementIssues);
     }
 
     const verdict = violations.length ? "NIEDOWIEZIONE" : "DOWIEZIONE";
@@ -949,20 +958,21 @@
     return {
       verdict,
       headline: verdict === "DOWIEZIONE"
-        ? "Plan został wykonany. To jest dzień przybliżający Cię do 80 kg."
+        ? warnings.length ? "Cel dnia został dowieziony, ale raport zawiera ważne ostrzeżenia." : "Plan został wykonany. To jest dzień przybliżający Cię do 80 kg."
         : "Nie dowiozłeś założeń. Nazywamy decyzje wprost i wracamy do planu od następnej decyzji.",
       violations,
+      warnings,
       turning_point: report.turningPoint || (violations.length ? "Wskaż dokładny moment pierwszego odejścia od planu." : "Nie odnotowano odejścia od planu.")
     };
   }
 
   function enforceHardChecks(aiEvaluation, hardEvaluation) {
-    const hardFail = hardEvaluation.verdict === "NIEDOWIEZIONE";
-    const violations = Array.from(new Set([...(hardEvaluation.violations || []), ...(aiEvaluation.violations || [])]));
+    const warnings = Array.from(new Set([...(hardEvaluation.warnings || []), ...(aiEvaluation.warnings || [])]));
     return {
-      verdict: hardFail ? "NIEDOWIEZIONE" : (aiEvaluation.verdict === "NIEDOWIEZIONE" ? "NIEDOWIEZIONE" : "DOWIEZIONE"),
+      verdict: hardEvaluation.verdict,
       headline: aiEvaluation.headline || hardEvaluation.headline,
-      violations,
+      violations: hardEvaluation.violations || [],
+      warnings,
       turning_point: aiEvaluation.turning_point || hardEvaluation.turning_point
     };
   }
@@ -970,6 +980,7 @@
   function renderEvaluation(report) {
     if (!report?.evaluation) {
       el.evaluationCard.hidden = true;
+      el.reopenReportButton.hidden = true;
       return;
     }
     const evaluation = report.evaluation;
@@ -980,8 +991,25 @@
     el.evaluationHeadline.textContent = evaluation.headline || "";
     el.evaluationDetails.innerHTML = `
       ${(evaluation.violations || []).length ? `<ul class="evaluation-list">${evaluation.violations.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : ""}
+      ${(evaluation.warnings || []).length ? `<div class="evaluation-warning"><strong>Ostrzeżenia:</strong><ul>${evaluation.warnings.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>` : ""}
       <div class="evaluation-line"><strong>Moment:</strong><br>${escapeHtml(evaluation.turning_point || "—")}</div>
     `;
+    el.reopenReportButton.hidden = !report.closed || report.date !== localDateKey(new Date());
+  }
+
+  async function reopenCurrentReport() {
+    const report = state.currentReport;
+    if (!report?.closed || report.date !== localDateKey(new Date())) return;
+    if (!window.confirm("Otworzyć dzisiejszy raport do poprawy i ponownego przeliczenia? Wszystkie wpisane dane zostaną zachowane.")) return;
+    report.closed = false;
+    report.closedAt = null;
+    report.verdict = null;
+    report.evaluation = null;
+    await persistReport(report);
+    setReportLocked(false);
+    renderEvaluation(report);
+    renderAll();
+    showToast("Raport otwarty. Dane zostały zachowane.");
   }
 
   function setReportLocked(locked) {
@@ -1378,7 +1406,7 @@
         window.location.reload();
       });
       navigator.serviceWorker
-        .register("./sw.js?v=8", { updateViaCache: "none" })
+        .register("./sw.js?v=9", { updateViaCache: "none" })
         .then(registration => registration.update())
         .catch(error => console.warn("Service worker:", error));
     }

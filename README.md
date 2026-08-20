@@ -8,6 +8,9 @@ Mobilna aplikacja do pełnego raportowania Projektu 80 kg.
 - szkic dnia zachowujący poranne pomiary i późniejsze uzupełnienia;
 - wiele pozycji jedzenia i napojów z gramaturą, kaloriami i zdjęciem;
 - twardy werdykt `DOWIEZIONE` / `NIEDOWIEZIONE`;
+- kalorie poniżej dolnego zakresu są ostrzeżeniem, a nie automatycznym niedowiezieniem;
+- uzasadniony dzień regeneracyjny zwalnia z planu ruchowego po podaniu powodu;
+- dzisiejszy raport można otworzyć, poprawić i ponownie przeliczyć;
 - automatyczne oznaczanie opuszczonych dni jako `NIEDOWIEZIONE` po ponownym uruchomieniu aplikacji;
 - historia, wykres masy, seria dowiezionych dni i eksport JSON;
 - mobilny układ i instalacja jako PWA;

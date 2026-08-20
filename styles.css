@@ -281,6 +281,9 @@ textarea { resize: vertical; min-height: 82px; }
 .check-row { display: flex; align-items: flex-start; gap: 10px; margin-top: 13px; }
 .critical-check { padding: 13px; background: rgba(245, 196, 81, .07); border: 1px solid rgba(245, 196, 81, .22); border-radius: 13px; }
 .critical-check span { line-height: 1.35; }
+.recovery-check { padding: 13px; background: rgba(85, 167, 255, .07); border: 1px solid rgba(85, 167, 255, .22); border-radius: 13px; }
+.recovery-check span { display: grid; gap: 4px; line-height: 1.35; }
+.recovery-check small { color: var(--muted); font-weight: 500; }
 .choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 14px; }
 .choice-card { display: flex; align-items: center; gap: 10px; padding: 14px; background: #101318; border: 1px solid var(--border); border-radius: 13px; }
 .photo-preview { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 9px; }
@@ -297,7 +300,10 @@ textarea { resize: vertical; min-height: 82px; }
 .evaluation-card h3 { margin: 7px 0 10px; font-size: 1.4rem; }
 .evaluation-headline { color: #e7eaf0; font-weight: 700; }
 .evaluation-list { margin: 10px 0; padding-left: 18px; color: var(--muted); font-size: .82rem; }
+.evaluation-warning { margin-top: 12px; padding: 12px; color: #f5c451; background: rgba(245, 196, 81, .08); border: 1px solid rgba(245, 196, 81, .24); border-radius: 11px; font-size: .82rem; }
+.evaluation-warning ul { margin: 7px 0 0; padding-left: 18px; }
 .evaluation-line { margin-top: 12px; padding: 12px; background: var(--surface-2); border-radius: 11px; font-size: .82rem; }
+.evaluation-card .secondary-button { margin-top: 14px; }
 
 .compact-grid { margin-top: 6px; }
 .compact-grid .metric-card { min-height: 96px; }
