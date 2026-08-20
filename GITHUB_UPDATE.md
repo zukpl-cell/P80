@@ -15,7 +15,7 @@
    - `sw.js`,
    - katalog `icons`,
    - katalog `supabase`.
-6. Commit message: `P80 V16 - przywrócenie raportu 20.08`.
+6. Commit message: `P80 V17 - automatyczne rozliczenie raportu`.
 7. Wybierz `Commit changes`.
 
 GitHub Pages powinien wdrożyć zmianę automatycznie. Status sprawdzisz w `Actions` albo `Deployments → github-pages`.

@@ -480,21 +480,38 @@
     while (cursor <= yesterday) {
       const date = localDateKey(cursor);
       const existing = state.reports.find(report => report.date === date);
-      if (!existing?.closed) {
-        const missed = existing || defaultReport(date);
-        missed.closed = true;
-        missed.closedAt = new Date(`${date}T23:59:59`).toISOString();
-        missed.verdict = "NIEDOWIEZIONE";
-        missed.evaluation = {
-          verdict: "NIEDOWIEZIONE",
-          headline: "Raport nie został zamknięty przed północą.",
-          violations: ["Raport dnia nie został zamknięty do godziny 23:59."],
-          turning_point: "Nie zamknięto obowiązkowego raportu przed końcem dnia."
-        };
-        await persistReport(missed);
+      const shouldRepairAutomaticClosure = existing?.closed && isAutomaticMidnightClosure(existing);
+      if (!existing?.closed || shouldRepairAutomaticClosure) {
+        const report = existing || defaultReport(date);
+        const errors = validateReport(report);
+        report.closed = true;
+        report.closedAt = new Date(`${date}T23:59:59`).toISOString();
+        if (errors.length) {
+          report.verdict = "NIEDOWIEZIONE";
+          report.evaluation = {
+            verdict: "NIEDOWIEZIONE",
+            headline: existing
+              ? "Zapisany szkic nie był kompletny o północy."
+              : "Raport nie został utworzony przed północą.",
+            violations: errors,
+            warnings: [],
+            turning_point: "Raport nie został ukończony przed końcem dnia."
+          };
+        } else {
+          report.evaluation = deterministicEvaluation(report);
+          report.verdict = report.evaluation.verdict;
+        }
+        await persistReport(report);
       }
       cursor.setDate(cursor.getDate() + 1);
     }
+  }
+
+  function isAutomaticMidnightClosure(report) {
+    const headline = String(report?.evaluation?.headline || "");
+    return headline === "Raport nie został zamknięty przed północą."
+      || headline === "Zapisany szkic nie był kompletny o północy."
+      || headline === "Raport nie został utworzony przed północą.";
   }
 
   function scheduleMidnightRollover() {
@@ -522,7 +539,7 @@
       configureDates();
       openReport(state.currentDate, false);
       renderAll();
-      showToast("Rozpoczął się nowy dzień. Niezamknięty poprzedni raport otrzymał werdykt NIEDOWIEZIONE.");
+      showToast("Rozpoczął się nowy dzień. Poprzedni raport został automatycznie rozliczony.");
     } finally {
       state.rolloverRunning = false;
       scheduleMidnightRollover();
@@ -1244,13 +1261,23 @@
       ${(evaluation.warnings || []).length ? `<div class="evaluation-warning"><strong>Ostrzeżenia:</strong><ul>${evaluation.warnings.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>` : ""}
       <div class="evaluation-line"><strong>Moment:</strong><br>${escapeHtml(evaluation.turning_point || "—")}</div>
     `;
-    el.reopenReportButton.hidden = !report.closed || report.date !== localDateKey(new Date());
+    const isToday = report.date === localDateKey(new Date());
+    const canRepair = report.date === PROJECT.startDate || isAutomaticMidnightClosure(report);
+    el.reopenReportButton.hidden = !report.closed || (!isToday && !canRepair);
+    el.reopenReportButton.textContent = isToday
+      ? "Popraw i przelicz dzisiejszy raport"
+      : "Uzupełnij i przelicz ten raport";
   }
 
   async function reopenCurrentReport() {
     const report = state.currentReport;
-    if (!report?.closed || report.date !== localDateKey(new Date())) return;
-    if (!window.confirm("Otworzyć dzisiejszy raport do poprawy i ponownego przeliczenia? Wszystkie wpisane dane zostaną zachowane.")) return;
+    const isToday = report?.date === localDateKey(new Date());
+    const canRepair = report?.date === PROJECT.startDate || isAutomaticMidnightClosure(report);
+    if (!report?.closed || (!isToday && !canRepair)) return;
+    const question = isToday
+      ? "Otworzyć dzisiejszy raport do poprawy i ponownego przeliczenia? Wszystkie wpisane dane zostaną zachowane."
+      : `Otworzyć raport ${formatShortDate(report.date)} do uzupełnienia i ponownego przeliczenia? Wszystkie odzyskane dane zostaną zachowane.`;
+    if (!window.confirm(question)) return;
     report.closed = false;
     report.closedAt = null;
     report.verdict = null;
@@ -1758,7 +1785,7 @@
         window.location.reload();
       });
       navigator.serviceWorker
-        .register("./sw.js?v=16", { updateViaCache: "none" })
+        .register("./sw.js?v=17", { updateViaCache: "none" })
         .then(registration => registration.update())
         .catch(error => console.warn("Service worker:", error));
     }
