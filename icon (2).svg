@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#0b0d10"/>
+  <path d="M116 128h280v256H116z" fill="#171b21" stroke="#ff5a1f" stroke-width="18"/>
+  <path d="M178 216h45v80h-45zm58-48h45v128h-45zm58 24h45v104h-45z" fill="#ff5a1f"/>
+  <text x="256" y="360" text-anchor="middle" font-family="Arial,sans-serif" font-size="76" font-weight="700" fill="#fff">P80</text>
+</svg>

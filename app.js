@@ -51,7 +51,11 @@
     cucumber: { name: "Ogórek", category: "vegetables", unit: "g", kcal: 0.15, carbs: 0.018 },
     zucchini: { name: "Cukinia", category: "vegetables", unit: "g", kcal: 0.17, carbs: 0.021 },
     mushrooms: { name: "Pieczarki", category: "vegetables", unit: "g", kcal: 0.22, carbs: 0.023 },
+    enoki: { name: "Grzyby enoki", category: "vegetables", unit: "g", kcal: 0.37, carbs: 0.051 },
+    oysterMushrooms: { name: "Boczniaki", category: "vegetables", unit: "g", kcal: 0.33, carbs: 0.038 },
+    shimeji: { name: "Grzyby shimeji", category: "vegetables", unit: "g", kcal: 0.22, carbs: 0.031 },
     spinach: { name: "Szpinak", category: "vegetables", unit: "g", kcal: 0.23, carbs: 0.014 },
+    asparagus: { name: "Szparagi", category: "vegetables", unit: "g", kcal: 0.2, carbs: 0.018 },
     greenBeans: { name: "Fasolka szparagowa", category: "vegetables", unit: "g", kcal: 0.31, carbs: 0.045 },
     sauerkraut: { name: "Kapusta kiszona", category: "vegetables", unit: "g", kcal: 0.19, carbs: 0.018 },
     lettuce: { name: "Sałata", category: "vegetables", unit: "g", kcal: 0.15, carbs: 0.012 },
@@ -65,6 +69,9 @@
     coconutOil: { name: "Olej kokosowy", category: "fats", unit: "g", kcal: 8.92, carbs: 0 },
     almonds: { name: "Migdały", category: "nuts", unit: "g", kcal: 5.79, carbs: 0.096 },
     walnuts: { name: "Orzechy włoskie", category: "nuts", unit: "g", kcal: 6.54, carbs: 0.07 },
+    pecans: { name: "Orzechy pekan", category: "nuts", unit: "g", kcal: 6.91, carbs: 0.04 },
+    macadamia: { name: "Orzechy makadamia", category: "nuts", unit: "g", kcal: 7.18, carbs: 0.054 },
+    hazelnuts: { name: "Orzechy laskowe", category: "nuts", unit: "g", kcal: 6.28, carbs: 0.07 },
     pumpkinSeeds: { name: "Pestki dyni", category: "nuts", unit: "g", kcal: 5.59, carbs: 0.107 },
     coffee: { name: "Kawa czarna", category: "drinks", unit: "ml", kcal: 0.008, carbs: 0 }
   };
@@ -1606,7 +1613,7 @@
         window.location.reload();
       });
       navigator.serviceWorker
-        .register("./sw.js?v=10", { updateViaCache: "none" })
+        .register("./sw.js?v=12", { updateViaCache: "none" })
         .then(registration => registration.update())
         .catch(error => console.warn("Service worker:", error));
     }
