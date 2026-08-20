@@ -9,7 +9,7 @@ window.P80_CONFIG = {
     targetWeight: 80,
     calorieTarget: 1900,
     calorieFloor: 1700,
-    reportDeadlineHour: 20,
+    reportDeadlineHour: 24,
     gymDays: [1, 3, 5],
     homeMinutesMin: 20,
     bikeKmMin: 20

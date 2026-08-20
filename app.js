@@ -117,7 +117,9 @@
     customFoods: {},
     pendingWeightFile: null,
     weeklyLoading: false,
-    installPrompt: null
+    installPrompt: null,
+    midnightTimer: null,
+    rolloverRunning: false
   };
 
   const el = {};
@@ -133,6 +135,7 @@
     await materializeMissedReports();
     openReport(state.currentDate, false);
     renderAll();
+    scheduleMidnightRollover();
     registerServiceWorker();
   }
 
@@ -206,6 +209,10 @@
       state.installPrompt = event;
       el.installButton.hidden = false;
     });
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) checkDayRollover();
+    });
+    window.addEventListener("focus", checkDayRollover);
   }
 
   function configureDates() {
@@ -469,20 +476,53 @@
     let cursor = new Date(start);
     while (cursor <= yesterday) {
       const date = localDateKey(cursor);
-      if (!state.reports.some(report => report.date === date)) {
-        const missed = defaultReport(date);
+      const existing = state.reports.find(report => report.date === date);
+      if (!existing?.closed) {
+        const missed = existing || defaultReport(date);
         missed.closed = true;
-        missed.closedAt = `${date}T20:00:00`;
+        missed.closedAt = new Date(`${date}T23:59:59`).toISOString();
         missed.verdict = "NIEDOWIEZIONE";
         missed.evaluation = {
           verdict: "NIEDOWIEZIONE",
-          headline: "Brak raportu oznacza dzień niedowieziony.",
-          violations: ["Raport dnia nie został wysłany ani zamknięty."],
-          turning_point: "Nie wykonano obowiązkowego raportu o 20:00."
+          headline: "Raport nie został zamknięty przed północą.",
+          violations: ["Raport dnia nie został zamknięty do godziny 23:59."],
+          turning_point: "Nie zamknięto obowiązkowego raportu przed końcem dnia."
         };
         await persistReport(missed);
       }
       cursor.setDate(cursor.getDate() + 1);
+    }
+  }
+
+  function scheduleMidnightRollover() {
+    clearTimeout(state.midnightTimer);
+    const now = new Date();
+    const nextDay = new Date(now);
+    nextDay.setHours(24, 0, 1, 0);
+    state.midnightTimer = setTimeout(checkDayRollover, nextDay.getTime() - now.getTime());
+  }
+
+  async function checkDayRollover() {
+    if (state.rolloverRunning) return;
+    const newDate = localDateKey(new Date());
+    if (newDate === state.currentDate) {
+      scheduleMidnightRollover();
+      return;
+    }
+
+    state.rolloverRunning = true;
+    try {
+      clearTimeout(state.saveTimer);
+      if (state.currentReport && !state.currentReport.closed) await saveDraft(false);
+      await materializeMissedReports();
+      state.currentDate = newDate;
+      configureDates();
+      openReport(state.currentDate, false);
+      renderAll();
+      showToast("Rozpoczął się nowy dzień. Niezamknięty poprzedni raport otrzymał werdykt NIEDOWIEZIONE.");
+    } finally {
+      state.rolloverRunning = false;
+      scheduleMidnightRollover();
     }
   }
 
@@ -1613,7 +1653,7 @@
         window.location.reload();
       });
       navigator.serviceWorker
-        .register("./sw.js?v=13", { updateViaCache: "none" })
+        .register("./sw.js?v=14", { updateViaCache: "none" })
         .then(registration => registration.update())
         .catch(error => console.warn("Service worker:", error));
     }
