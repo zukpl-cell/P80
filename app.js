@@ -98,9 +98,8 @@
       "weightPhoto", "weightPhotoPreview", "addEntryButton", "entriesList", "calorieSum",
       "allFoodConfirmed", "gymPlanBadge", "homeMinutes", "gymMinutes", "bikeKm",
       "bikeMinutes", "steps", "gymSession", "gymExercisesPanel", "gymExercisesList",
-      "trainingNotes", "sleepHours", "hunger", "mood",
-      "painMorning", "painEvening", "radiation", "difficultMoment", "wellbeingNotes",
-      "ketoYes", "ketoNo", "turningPoint", "correction", "reportCompleteConfirmed",
+      "trainingNotes", "sleepHours", "hunger", "mood", "difficultMoment", "wellbeingNotes",
+      "ketoYes", "ketoNo", "turningPoint", "reportCompleteConfirmed",
       "validationBox", "saveDraftButton", "closeReportButton", "evaluationCard",
       "evaluationVerdict", "evaluationHeadline", "evaluationDetails", "historyStats",
       "historyList", "exportButton", "weeklySummaryCard", "weeklyPeriod", "weeklyVerdict",
@@ -351,9 +350,7 @@
           verdict: "NIEDOWIEZIONE",
           headline: "Brak raportu oznacza dzień niedowieziony.",
           violations: ["Raport dnia nie został wysłany ani zamknięty."],
-          turning_point: "Nie wykonano obowiązkowego raportu o 20:00.",
-          correction: "Wrócić do planu od najbliższej decyzji i zamknąć dzisiejszy raport o 20:00.",
-          safety_note: "Bez głodówki i treningu za karę."
+          turning_point: "Nie wykonano obowiązkowego raportu o 20:00."
         };
         await persistReport(missed);
       }
@@ -383,14 +380,10 @@
       sleepHours: null,
       hunger: null,
       mood: null,
-      painMorning: null,
-      painEvening: null,
-      radiation: "",
       difficultMoment: "",
       wellbeingNotes: "",
       keto: "",
       turningPoint: "",
-      correction: "",
       reportCompleteConfirmed: false,
       closed: false,
       closedAt: null,
@@ -401,7 +394,7 @@
   }
 
   function normalizeReport(report) {
-    return {
+    const normalized = {
       ...report,
       id: report.id || crypto.randomUUID(),
       entries: Array.isArray(report.entries) ? report.entries : [],
@@ -414,10 +407,28 @@
       reportCompleteConfirmed: Boolean(report.reportCompleteConfirmed),
       closed: Boolean(report.closed)
     };
+    delete normalized.painMorning;
+    delete normalized.painEvening;
+    delete normalized.radiation;
+    delete normalized.correction;
+    if (normalized.evaluation) {
+      normalized.evaluation = { ...normalized.evaluation };
+      delete normalized.evaluation.correction;
+      delete normalized.evaluation.safety_note;
+    }
+    return normalized;
   }
 
   function sanitizeReport(report, stripAllPreviews = false) {
     const clone = JSON.parse(JSON.stringify(report));
+    delete clone.painMorning;
+    delete clone.painEvening;
+    delete clone.radiation;
+    delete clone.correction;
+    if (clone.evaluation) {
+      delete clone.evaluation.correction;
+      delete clone.evaluation.safety_note;
+    }
     if (stripAllPreviews || clone.weightPhotoPath) delete clone.weightPhotoPreview;
     clone.entries = (clone.entries || []).map(entry => {
       if (stripAllPreviews || entry.photoPath) delete entry.photoPreview;
@@ -442,7 +453,7 @@
 
   function populateReportForm() {
     const report = state.currentReport;
-    el.weight.value = valueOrBlank(report.weight);
+    el.weight.value = decimalInputValue(report.weight);
     el.glucose.value = valueOrBlank(report.glucose);
     el.ketones.value = valueOrBlank(report.ketones);
     el.homeMinutes.value = numberOrZero(report.homeMinutes);
@@ -455,15 +466,11 @@
     el.sleepHours.value = valueOrBlank(report.sleepHours);
     el.hunger.value = valueOrBlank(report.hunger);
     el.mood.value = valueOrBlank(report.mood);
-    el.painMorning.value = valueOrBlank(report.painMorning);
-    el.painEvening.value = valueOrBlank(report.painEvening);
-    el.radiation.value = report.radiation || "";
     el.difficultMoment.value = report.difficultMoment || "";
     el.wellbeingNotes.value = report.wellbeingNotes || "";
     el.ketoYes.checked = report.keto === "yes";
     el.ketoNo.checked = report.keto === "no";
     el.turningPoint.value = report.turningPoint || "";
-    el.correction.value = report.correction || "";
     el.allFoodConfirmed.checked = Boolean(report.allFoodConfirmed);
     el.reportCompleteConfirmed.checked = Boolean(report.reportCompleteConfirmed);
     renderGymExercises(report.gymSession || "", report.gymExercises || []);
@@ -488,14 +495,14 @@
     report.sleepHours = numberOrNull(el.sleepHours.value);
     report.hunger = numberOrNull(el.hunger.value);
     report.mood = numberOrNull(el.mood.value);
-    report.painMorning = numberOrNull(el.painMorning.value);
-    report.painEvening = numberOrNull(el.painEvening.value);
-    report.radiation = el.radiation.value;
     report.difficultMoment = el.difficultMoment.value.trim();
     report.wellbeingNotes = el.wellbeingNotes.value.trim();
     report.keto = document.querySelector('input[name="keto"]:checked')?.value || "";
     report.turningPoint = el.turningPoint.value.trim();
-    report.correction = el.correction.value.trim();
+    delete report.painMorning;
+    delete report.painEvening;
+    delete report.radiation;
+    delete report.correction;
     report.allFoodConfirmed = el.allFoodConfirmed.checked;
     report.reportCompleteConfirmed = el.reportCompleteConfirmed.checked;
     state.currentReport = report;
@@ -854,13 +861,12 @@
   function validateReport(report) {
     const errors = [];
     if (report.weight === null) errors.push("Brak porannej masy ciała.");
+    else if (report.weight < 40 || report.weight > 200) errors.push("Masa ciała musi mieścić się w zakresie 40–200 kg.");
     if (!report.entries.length) errors.push("Brak wpisów jedzenia i napojów.");
     if (!report.allFoodConfirmed) errors.push("Nie potwierdzono kompletności jedzenia i napojów.");
     if (report.sleepHours === null) errors.push("Brak liczby godzin snu.");
     if (report.hunger === null) errors.push("Brak poziomu głodu.");
     if (report.mood === null) errors.push("Brak oceny samopoczucia.");
-    if (report.painMorning === null || report.painEvening === null) errors.push("Brak oceny bólu lędźwi rano lub wieczorem.");
-    if (!report.radiation) errors.push("Brak informacji o promieniowaniu bólu.");
     if (!report.difficultMoment) errors.push("Nie opisano trudnego momentu dnia.");
     if (!report.keto) errors.push("Nie zaznaczono, czy utrzymano keto.");
     if (!report.reportCompleteConfirmed) errors.push("Nie potwierdzono kompletności raportu.");
@@ -922,33 +928,23 @@
     const calories = totalCalories(report);
     const gymPlanned = PROJECT.gymDays.includes(parseLocalDate(report.date).getDay());
     const expectedSession = expectedGymSession(report.date);
-    const painAdjustment = report.painMorning >= 5 || report.radiation === "stronger";
 
     if (calories > PROJECT.calorieTarget) violations.push(`Przekroczono limit ${PROJECT.calorieTarget} kcal: wpisano ${numberFormat(calories, 0)} kcal.`);
     if (calories < PROJECT.calorieFloor) violations.push(`Kaloryczność ${numberFormat(calories, 0)} kcal jest poniżej bezpiecznego zakresu projektu ${PROJECT.calorieFloor}–${PROJECT.calorieTarget} kcal.`);
     if (report.keto !== "yes") violations.push("Nie utrzymano keto.");
-    if (!painAdjustment) {
-      if (report.homeMinutes < PROJECT.homeMinutesMin) violations.push(`Trening domowy krótszy niż ${PROJECT.homeMinutesMin} minut.`);
-      if (report.bikeKm < PROJECT.bikeKmMin) violations.push(`Rower poniżej planu ${PROJECT.bikeKmMin} km.`);
-      if (gymPlanned && report.gymMinutes <= 0) violations.push("Nie wykonano zaplanowanej siłowni.");
-      if (gymPlanned && !report.gymSession) violations.push("Nie wskazano sesji siłowni A/B/C.");
-      if (gymPlanned && report.gymSession && report.gymSession !== expectedSession) violations.push(`Wykonano plan ${report.gymSession} zamiast zaplanowanego planu ${expectedSession}.`);
-      if (gymPlanned && report.gymSession && (report.gymExercises || []).some(item => !item.done)) {
-        violations.push("Nie wykonano wszystkich ćwiczeń zaplanowanej sesji siłowni.");
-      }
-      if (gymPlanned && report.gymSession && (report.gymExercises || []).some(item => item.done && (item.sets === null || !item.reps || item.load === null))) {
-        violations.push("Nie wpisano kompletu serii, powtórzeń i obciążeń dla wykonanych ćwiczeń.");
-      }
-    } else if (!report.trainingNotes) {
-      violations.push("Przy nasilonych objawach nie opisano bezpiecznej modyfikacji ruchu ani decyzji o konsultacji.");
+    if (report.homeMinutes < PROJECT.homeMinutesMin) violations.push(`Trening domowy krótszy niż ${PROJECT.homeMinutesMin} minut.`);
+    if (report.bikeKm < PROJECT.bikeKmMin) violations.push(`Rower poniżej planu ${PROJECT.bikeKmMin} km.`);
+    if (gymPlanned && report.gymMinutes <= 0) violations.push("Nie wykonano zaplanowanej siłowni.");
+    if (gymPlanned && !report.gymSession) violations.push("Nie wskazano sesji siłowni A/B/C.");
+    if (gymPlanned && report.gymSession && report.gymSession !== expectedSession) violations.push(`Wykonano plan ${report.gymSession} zamiast zaplanowanego planu ${expectedSession}.`);
+    if (gymPlanned && report.gymSession && (report.gymExercises || []).some(item => !item.done)) {
+      violations.push("Nie wykonano wszystkich ćwiczeń zaplanowanej sesji siłowni.");
+    }
+    if (gymPlanned && report.gymSession && (report.gymExercises || []).some(item => item.done && (item.sets === null || !item.reps || item.load === null))) {
+      violations.push("Nie wpisano kompletu serii, powtórzeń i obciążeń dla wykonanych ćwiczeń.");
     }
 
     const verdict = violations.length ? "NIEDOWIEZIONE" : "DOWIEZIONE";
-    const painIncrease = report.painEvening - report.painMorning;
-    let safety = "Bez głodówki i bez dodatkowego treningu za karę.";
-    if (painIncrease >= 2 || report.radiation === "stronger") {
-      safety = "Ból lub promieniowanie wzrosły: kolejny trening należy zmniejszyć i obserwować objawy; przy drętwieniu, osłabieniu albo problemach z pęcherzem/jelitami potrzebna jest pilna pomoc medyczna.";
-    }
 
     return {
       verdict,
@@ -956,9 +952,7 @@
         ? "Plan został wykonany. To jest dzień przybliżający Cię do 80 kg."
         : "Nie dowiozłeś założeń. Nazywamy decyzje wprost i wracamy do planu od następnej decyzji.",
       violations,
-      turning_point: report.turningPoint || (violations.length ? "Wskaż dokładny moment pierwszego odejścia od planu." : "Nie odnotowano odejścia od planu."),
-      correction: report.correction || (violations.length ? "Najbliższy posiłek i kolejna decyzja mają być zgodne z planem — bez czekania do jutra." : "Powtórzyć ten sam standard następnego dnia."),
-      safety_note: safety
+      turning_point: report.turningPoint || (violations.length ? "Wskaż dokładny moment pierwszego odejścia od planu." : "Nie odnotowano odejścia od planu.")
     };
   }
 
@@ -969,9 +963,7 @@
       verdict: hardFail ? "NIEDOWIEZIONE" : (aiEvaluation.verdict === "NIEDOWIEZIONE" ? "NIEDOWIEZIONE" : "DOWIEZIONE"),
       headline: aiEvaluation.headline || hardEvaluation.headline,
       violations,
-      turning_point: aiEvaluation.turning_point || hardEvaluation.turning_point,
-      correction: aiEvaluation.correction || hardEvaluation.correction,
-      safety_note: aiEvaluation.safety_note || hardEvaluation.safety_note
+      turning_point: aiEvaluation.turning_point || hardEvaluation.turning_point
     };
   }
 
@@ -989,8 +981,6 @@
     el.evaluationDetails.innerHTML = `
       ${(evaluation.violations || []).length ? `<ul class="evaluation-list">${evaluation.violations.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : ""}
       <div class="evaluation-line"><strong>Moment:</strong><br>${escapeHtml(evaluation.turning_point || "—")}</div>
-      <div class="evaluation-line"><strong>Korekta:</strong><br>${escapeHtml(evaluation.correction || "—")}</div>
-      <div class="evaluation-line"><strong>Bezpieczeństwo:</strong><br>${escapeHtml(evaluation.safety_note || "—")}</div>
     `;
   }
 
@@ -1167,9 +1157,7 @@
       ${renderWeeklyList("Dowiezione", summary.wins)}
       ${renderWeeklyList("Niedowiezienie", summary.failures)}
       ${summary.pattern ? `<h4>Wzorzec</h4><p>${escapeHtml(summary.pattern)}</p>` : ""}
-      ${summary.correction ? `<h4>Korekta</h4><p>${escapeHtml(summary.correction)}</p>` : ""}
       ${renderWeeklyList("Priorytety następnego tygodnia", summary.next_week_focus)}
-      ${summary.safety_note ? `<h4>Bezpieczeństwo</h4><p>${escapeHtml(summary.safety_note)}</p>` : ""}
     `;
     if (!state.weeklyLoading) {
       el.weeklyStatus.textContent = `Aktualizacja: ${formatDateTime(latest.updatedAt)}`;
@@ -1390,7 +1378,7 @@
         window.location.reload();
       });
       navigator.serviceWorker
-        .register("./sw.js?v=7", { updateViaCache: "none" })
+        .register("./sw.js?v=8", { updateViaCache: "none" })
         .then(registration => registration.update())
         .catch(error => console.warn("Service worker:", error));
     }
@@ -1476,6 +1464,10 @@
 
   function valueOrBlank(value) {
     return value === null || value === undefined ? "" : value;
+  }
+
+  function decimalInputValue(value) {
+    return value === null || value === undefined ? "" : String(value).replace(".", ",");
   }
 
   function clamp(value, min, max) {

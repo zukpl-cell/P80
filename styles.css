@@ -309,8 +309,6 @@ textarea { resize: vertical; min-height: 82px; }
 .week-row:last-child { border-bottom: 0; }
 .week-row strong { color: var(--accent-2); }
 .week-row span { color: var(--muted); }
-.danger-zone { border-color: rgba(255, 94, 108, .22); }
-.danger-zone p { margin: 8px 0 0; color: var(--muted); font-size: .8rem; }
 
 .status-list { display: grid; gap: 8px; margin-top: 12px; }
 .status-line { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: .8rem; }

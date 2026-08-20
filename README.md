@@ -4,7 +4,8 @@ Mobilna aplikacja do pełnego raportowania Projektu 80 kg.
 
 ## Co działa
 
-- codzienny raport: masa, glukoza, ketony, jedzenie, napoje, ruch, sen, keto i lędźwie;
+- codzienny raport: masa z dokładnością po przecinku, glukoza, ketony, jedzenie, napoje, ruch, sen i keto;
+- szkic dnia zachowujący poranne pomiary i późniejsze uzupełnienia;
 - wiele pozycji jedzenia i napojów z gramaturą, kaloriami i zdjęciem;
 - twardy werdykt `DOWIEZIONE` / `NIEDOWIEZIONE`;
 - automatyczne oznaczanie opuszczonych dni jako `NIEDOWIEZIONE` po ponownym uruchomieniu aplikacji;

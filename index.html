@@ -8,11 +8,11 @@
   <title>P80 — Projekt 80 kg</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=7">
+  <link rel="stylesheet" href="./styles.css?v=8">
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="./config.js?v=7"></script>
-  <script defer src="./app.js?v=7"></script>
+  <script defer src="./config.js?v=8"></script>
+  <script defer src="./app.js?v=8"></script>
 </head>
 <body>
   <header class="topbar">
@@ -128,7 +128,7 @@
           </div>
           <div class="form-grid">
             <label>Masa ciała (kg) *
-              <input id="weight" name="weight" type="number" min="40" max="200" step="0.05" inputmode="decimal" required placeholder="np. 90,10">
+              <input id="weight" name="weight" type="text" inputmode="decimal" autocomplete="off" required placeholder="np. 90,10">
             </label>
             <label>Glukoza (mg/dl)
               <input id="glucose" name="glucose" type="number" min="20" max="500" step="1" inputmode="numeric" placeholder="opcjonalnie">
@@ -200,9 +200,8 @@
             <p class="helper">Zaznacz wykonane ćwiczenia i wpisz serie, powtórzenia oraz obciążenie.</p>
             <div id="gymExercisesList" class="gym-exercises"></div>
           </div>
-          <p class="helper">Jeżeli ból rano wynosi co najmniej 5/10 albo promieniowanie wyraźnie rośnie, nie nadrabiamy treningu za wszelką cenę. Opisz bezpieczną modyfikację w notatce.</p>
           <label>Notatka treningowa
-            <textarea id="trainingNotes" rows="3" placeholder="Co zrobiłem, intensywność, co zmieniłem z powodu lędźwi"></textarea>
+            <textarea id="trainingNotes" rows="3" placeholder="Co zrobiłem, intensywność i najważniejsze uwagi"></textarea>
           </label>
         </article>
 
@@ -210,7 +209,7 @@
           <div class="card-title-row">
             <div>
               <p class="step-number">04</p>
-              <h3>Regeneracja i lędźwie</h3>
+              <h3>Regeneracja</h3>
             </div>
           </div>
           <div class="form-grid">
@@ -223,26 +222,12 @@
             <label>Samopoczucie 1–10 *
               <input id="mood" type="number" min="1" max="10" step="1" inputmode="numeric" required>
             </label>
-            <label>Lędźwie rano 0–10 *
-              <input id="painMorning" type="number" min="0" max="10" step="1" inputmode="numeric" required>
-            </label>
-            <label>Lędźwie wieczorem 0–10 *
-              <input id="painEvening" type="number" min="0" max="10" step="1" inputmode="numeric" required>
-            </label>
-            <label>Promieniowanie *
-              <select id="radiation" required>
-                <option value="">Wybierz</option>
-                <option value="none">Brak</option>
-                <option value="minimal">Minimalne</option>
-                <option value="stronger">Wyraźnie większe</option>
-              </select>
-            </label>
           </div>
           <label>Trudny moment dnia *
             <textarea id="difficultMoment" rows="3" required placeholder="Kiedy najłatwiej było odpuścić i co wtedy zrobiłem?"></textarea>
           </label>
           <label>Samopoczucie i uwagi
-            <textarea id="wellbeingNotes" rows="3" placeholder="Energia, stres, ból, sytuacje nietypowe"></textarea>
+            <textarea id="wellbeingNotes" rows="3" placeholder="Energia, stres i sytuacje nietypowe"></textarea>
           </label>
         </article>
 
@@ -265,9 +250,6 @@
           </div>
           <label>Gdzie odpuściłem? <span class="muted">(jeśli dotyczy)</span>
             <textarea id="turningPoint" rows="3" placeholder="Konkretny moment i decyzja, bez usprawiedliwiania"></textarea>
-          </label>
-          <label>Działanie korygujące
-            <textarea id="correction" rows="3" placeholder="Co robię od następnego posiłku lub następnej decyzji?"></textarea>
           </label>
           <label class="check-row critical-check">
             <input id="reportCompleteConfirmed" type="checkbox">
@@ -359,10 +341,6 @@
         <div id="weeklyPlan" class="weekly-plan"></div>
       </article>
 
-      <article class="card danger-zone">
-        <h3>Lędźwie — wyłączone ćwiczenia</h3>
-        <p>Martwy ciąg, RDL, przysiad ze sztangą, hack squat/głęboka suwnica, wiosłowanie w opadzie, ab wheel, unoszenie nóg w zwisie i ciężkie wyciskanie nad głowę bez podparcia.</p>
-      </article>
     </section>
 
     <section id="view-settings" class="view" aria-labelledby="settingsTitle">

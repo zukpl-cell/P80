@@ -1,10 +1,10 @@
-const CACHE = "p80-v2-7";
+const CACHE = "p80-v2-8";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=7",
-  "./config.js?v=7",
-  "./app.js?v=7",
+  "./styles.css?v=8",
+  "./config.js?v=8",
+  "./app.js?v=8",
   "./manifest.webmanifest",
   "./icons/icon.svg"
 ];
