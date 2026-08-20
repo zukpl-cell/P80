@@ -14,6 +14,7 @@ Mobilna aplikacja do pełnego raportowania Projektu 80 kg.
 - uzasadniony dzień regeneracyjny zwalnia z planu ruchowego po podaniu powodu;
 - dzisiejszy raport można otworzyć, poprawić i ponownie przeliczyć;
 - raport pozostaje otwarty do 23:59, a o północy niezakończony dzień jest automatycznie oznaczany jako `NIEDOWIEZIONE`;
+- historia uwzględnia pierwszy dzień projektu — 20.08.2026 — również przy uruchomieniu aplikacji następnego dnia;
 - historia, wykres masy, seria dowiezionych dni i eksport JSON;
 - ekran startowy z symetrycznym trendem zmiany masy względem zera oraz wykresami glukozy i ketonów;
 - mobilny układ i instalacja jako PWA;

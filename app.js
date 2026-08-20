@@ -472,8 +472,7 @@
 
   async function materializeMissedReports() {
     const start = parseLocalDate(PROJECT.startDate || state.currentDate);
-    const yesterday = new Date();
-    yesterday.setHours(0, 0, 0, 0);
+    const yesterday = parseLocalDate(localDateKey(new Date()));
     yesterday.setDate(yesterday.getDate() - 1);
     if (start > yesterday) return;
 
@@ -1759,7 +1758,7 @@
         window.location.reload();
       });
       navigator.serviceWorker
-        .register("./sw.js?v=15", { updateViaCache: "none" })
+        .register("./sw.js?v=16", { updateViaCache: "none" })
         .then(registration => registration.update())
         .catch(error => console.warn("Service worker:", error));
     }
