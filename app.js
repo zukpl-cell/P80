@@ -111,6 +111,8 @@
     user: null,
     cloudReady: false,
     chart: null,
+    glucoseChart: null,
+    ketoneChart: null,
     saveTimer: null,
     pendingEntryFile: null,
     pendingIngredients: [],
@@ -143,7 +145,9 @@
     const ids = [
       "syncBadge", "setupBanner", "todayLabel", "deadlineBadge", "overdueBox",
       "currentWeight", "weightDelta", "toGoal", "streakValue", "todayVerdict",
-      "todayCalories", "progressPercent", "progressBar", "weightChart", "recentDays",
+      "todayCalories", "progressPercent", "progressBar", "weightChart", "weightChartBaseline",
+      "glucoseChart", "glucoseChartLatest", "glucoseChartEmpty",
+      "ketoneChart", "ketoneChartLatest", "ketoneChartEmpty", "recentDays",
       "reportDate", "closedBanner", "reportForm", "weight", "glucose", "ketones",
       "weightPhoto", "weightPhotoPreview", "addEntryButton", "entriesList", "calorieSum",
       "allFoodConfirmed", "gymPlanBadge", "homeMinutes", "gymMinutes", "bikeKm",
@@ -1281,7 +1285,9 @@
 
   function renderDashboard() {
     const sorted = [...state.reports].sort((a, b) => a.date.localeCompare(b.date));
-    const weighted = sorted.filter(report => Number.isFinite(Number(report.weight)));
+    const weighted = sorted.filter(report => hasNumericMeasurement(report.weight));
+    const glucoseReports = sorted.filter(report => hasNumericMeasurement(report.glucose)).slice(-30);
+    const ketoneReports = sorted.filter(report => hasNumericMeasurement(report.ketones)).slice(-30);
     const latest = weighted.at(-1);
     const current = latest ? Number(latest.weight) : PROJECT.startWeight;
     const lost = PROJECT.startWeight - current;
@@ -1305,6 +1311,32 @@
 
     renderRecentDays(sorted);
     renderWeightChart(weighted.slice(-30));
+    renderMeasurementChart({
+      reports: glucoseReports,
+      field: "glucose",
+      canvas: el.glucoseChart,
+      empty: el.glucoseChartEmpty,
+      latest: el.glucoseChartLatest,
+      stateKey: "glucoseChart",
+      color: "#55a7ff",
+      background: "rgba(85,167,255,.12)",
+      unit: "mg/dl",
+      digits: 0,
+      floorAtZero: false
+    });
+    renderMeasurementChart({
+      reports: ketoneReports,
+      field: "ketones",
+      canvas: el.ketoneChart,
+      empty: el.ketoneChartEmpty,
+      latest: el.ketoneChartLatest,
+      stateKey: "ketoneChart",
+      color: "#3ddc97",
+      background: "rgba(61,220,151,.12)",
+      unit: "mmol/l",
+      digits: 1,
+      floorAtZero: true
+    });
   }
 
   function renderRecentDays(reports) {
@@ -1315,7 +1347,7 @@
     }
     el.recentDays.innerHTML = items.map(report => `
       <div class="recent-item">
-        <div><strong>${formatShortDate(report.date)}</strong><p>${numberFormat(totalCalories(report), 0)} kcal · ${report.weight ? `${numberFormat(report.weight, 2)} kg` : "bez masy"}</p></div>
+        <div><strong>${formatShortDate(report.date)}</strong><p>${numberFormat(totalCalories(report), 0)} kcal · ${hasNumericMeasurement(report.weight) ? `${numberFormat(report.weight, 2)} kg` : "bez masy"}</p></div>
         ${verdictBadge(report.verdict)}
       </div>
     `).join("");
@@ -1324,13 +1356,18 @@
   function renderWeightChart(reports) {
     if (!window.Chart || !el.weightChart) return;
     if (state.chart) state.chart.destroy();
+    const baseline = reports.length ? Number(reports[0].weight) : Number(PROJECT.startWeight);
+    const changes = reports.map(report => Number(report.weight) - baseline);
+    const maxAbsoluteChange = changes.length ? Math.max(...changes.map(Math.abs)) : 0;
+    const range = Math.max(0.5, Math.ceil(maxAbsoluteChange * 2) / 2);
+    el.weightChartBaseline.textContent = `0 = ${numberFormat(baseline, 2)} kg`;
     const context = el.weightChart.getContext("2d");
     state.chart = new window.Chart(context, {
       type: "line",
       data: {
         labels: reports.map(report => formatShortDate(report.date)),
         datasets: [{
-          data: reports.map(report => Number(report.weight)),
+          data: changes,
           borderColor: "#ff5a1f",
           backgroundColor: "rgba(255,90,31,.13)",
           pointBackgroundColor: "#ff8b60",
@@ -1343,10 +1380,79 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: context => {
+                const report = reports[context.dataIndex];
+                return `${numberFormat(report.weight, 2)} kg · zmiana ${formatSignedValue(context.parsed.y, 2)} kg`;
+              }
+            }
+          }
+        },
         scales: {
           x: { ticks: { color: "#7f8998", maxRotation: 0 }, grid: { display: false } },
-          y: { ticks: { color: "#7f8998" }, grid: { color: "rgba(255,255,255,.05)" } }
+          y: {
+            min: -range,
+            max: range,
+            ticks: {
+              color: "#7f8998",
+              callback: value => `${formatSignedValue(value, 1)} kg`
+            },
+            grid: {
+              color: context => Number(context.tick?.value) === 0 ? "rgba(255,122,61,.55)" : "rgba(255,255,255,.05)",
+              lineWidth: context => Number(context.tick?.value) === 0 ? 2 : 1
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function renderMeasurementChart({ reports, field, canvas, empty, latest, stateKey, color, background, unit, digits, floorAtZero }) {
+    if (!window.Chart || !canvas) return;
+    if (state[stateKey]) state[stateKey].destroy();
+    const hasData = reports.length > 0;
+    canvas.hidden = !hasData;
+    empty.hidden = hasData;
+    latest.textContent = hasData
+      ? `${numberFormat(reports.at(-1)[field], digits)} ${unit}`
+      : unit;
+    if (!hasData) {
+      state[stateKey] = null;
+      return;
+    }
+
+    state[stateKey] = new window.Chart(canvas.getContext("2d"), {
+      type: "line",
+      data: {
+        labels: reports.map(report => formatShortDate(report.date)),
+        datasets: [{
+          data: reports.map(report => Number(report[field])),
+          borderColor: color,
+          backgroundColor: background,
+          pointBackgroundColor: color,
+          pointRadius: 3,
+          borderWidth: 2,
+          fill: true,
+          tension: .28
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: context => `${numberFormat(context.parsed.y, digits)} ${unit}` } }
+        },
+        scales: {
+          x: { ticks: { color: "#7f8998", maxRotation: 0 }, grid: { display: false } },
+          y: {
+            suggestedMin: floorAtZero ? 0 : undefined,
+            ticks: { color: "#7f8998" },
+            grid: { color: "rgba(255,255,255,.05)" }
+          }
         }
       }
     });
@@ -1375,7 +1481,7 @@
       <button class="history-item" type="button" data-open-date="${report.date}">
         <div>
           <strong>${formatLongDate(report.date)}</strong>
-          <p>${report.weight ? `${numberFormat(report.weight, 2)} kg` : "brak masy"} · ${numberFormat(totalCalories(report), 0)} kcal · keto: ${report.keto === "yes" ? "tak" : report.keto === "no" ? "nie" : "—"}</p>
+          <p>${hasNumericMeasurement(report.weight) ? `${numberFormat(report.weight, 2)} kg` : "brak masy"} · ${numberFormat(totalCalories(report), 0)} kcal · keto: ${report.keto === "yes" ? "tak" : report.keto === "no" ? "nie" : "—"}</p>
         </div>
         ${verdictBadge(report.verdict || "SZKIC")}
       </button>
@@ -1653,7 +1759,7 @@
         window.location.reload();
       });
       navigator.serviceWorker
-        .register("./sw.js?v=14", { updateViaCache: "none" })
+        .register("./sw.js?v=15", { updateViaCache: "none" })
         .then(registration => registration.update())
         .catch(error => console.warn("Service worker:", error));
     }
@@ -1735,6 +1841,16 @@
 
   function numberOrZero(value) {
     return numberOrNull(value) ?? 0;
+  }
+
+  function hasNumericMeasurement(value) {
+    return value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
+  }
+
+  function formatSignedValue(value, digits = 1) {
+    const number = Number(value);
+    const sign = number > 0 ? "+" : number < 0 ? "−" : "";
+    return `${sign}${numberFormat(Math.abs(number), digits)}`;
   }
 
   function valueOrBlank(value) {

@@ -15,6 +15,7 @@ Mobilna aplikacja do pełnego raportowania Projektu 80 kg.
 - dzisiejszy raport można otworzyć, poprawić i ponownie przeliczyć;
 - raport pozostaje otwarty do 23:59, a o północy niezakończony dzień jest automatycznie oznaczany jako `NIEDOWIEZIONE`;
 - historia, wykres masy, seria dowiezionych dni i eksport JSON;
+- ekran startowy z symetrycznym trendem zmiany masy względem zera oraz wykresami glukozy i ketonów;
 - mobilny układ i instalacja jako PWA;
 - tryb lokalny bez konfiguracji;
 - prywatna synchronizacja, zdjęcia i werdykt AI po podłączeniu Supabase.

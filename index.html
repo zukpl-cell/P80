@@ -6,14 +6,14 @@
   <meta name="theme-color" content="#0b0d10">
   <meta name="description" content="P80 — codzienny raport projektu 80 kg">
   <title>P80 — Projekt 80 kg</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=14">
-  <link rel="icon" href="./icons/favicon-32.png?v=14" type="image/png" sizes="32x32">
-  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=14" sizes="180x180">
-  <link rel="stylesheet" href="./styles.css?v=14">
+  <link rel="manifest" href="./manifest.webmanifest?v=15">
+  <link rel="icon" href="./icons/favicon-32.png?v=15" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=15" sizes="180x180">
+  <link rel="stylesheet" href="./styles.css?v=15">
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="./config.js?v=14"></script>
-  <script defer src="./app.js?v=14"></script>
+  <script defer src="./config.js?v=15"></script>
+  <script defer src="./app.js?v=15"></script>
 </head>
 <body>
   <header class="topbar">
@@ -91,10 +91,40 @@
             <p class="eyebrow">TREND</p>
             <h3>Masa ciała</h3>
           </div>
-          <span class="muted">ostatnie 30 wpisów</span>
+          <span id="weightChartBaseline" class="muted">0 = pierwszy pomiar</span>
         </div>
         <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
       </article>
+
+      <div class="health-charts-grid">
+        <article class="card chart-card compact-chart-card">
+          <div class="card-title-row">
+            <div>
+              <p class="eyebrow">TREND</p>
+              <h3>Glukoza</h3>
+            </div>
+            <span id="glucoseChartLatest" class="muted">mg/dl</span>
+          </div>
+          <div class="chart-wrap compact-chart-wrap">
+            <canvas id="glucoseChart"></canvas>
+            <div id="glucoseChartEmpty" class="chart-empty" hidden>Brak pomiarów glukozy.</div>
+          </div>
+        </article>
+
+        <article class="card chart-card compact-chart-card">
+          <div class="card-title-row">
+            <div>
+              <p class="eyebrow">TREND</p>
+              <h3>Ketony</h3>
+            </div>
+            <span id="ketoneChartLatest" class="muted">mmol/l</span>
+          </div>
+          <div class="chart-wrap compact-chart-wrap">
+            <canvas id="ketoneChart"></canvas>
+            <div id="ketoneChartEmpty" class="chart-empty" hidden>Brak pomiarów ketonów.</div>
+          </div>
+        </article>
+      </div>
 
       <article class="card">
         <div class="card-title-row">

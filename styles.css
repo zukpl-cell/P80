@@ -191,6 +191,18 @@ p { line-height: 1.48; }
 
 .chart-card { margin-top: 16px; }
 .chart-wrap { position: relative; min-height: 230px; margin-top: 14px; }
+.health-charts-grid { display: grid; gap: 16px; }
+.compact-chart-card { min-width: 0; }
+.compact-chart-wrap { min-height: 185px; }
+.chart-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: .82rem;
+  text-align: center;
+}
 .muted, .helper, .required-note { color: var(--muted); }
 .muted { font-size: .76rem; }
 .helper { margin: 9px 0 14px; font-size: .8rem; }
@@ -211,6 +223,10 @@ p { line-height: 1.48; }
 .history-item { width: 100%; text-align: left; }
 .recent-item p, .history-item p { margin: 3px 0 0; color: var(--muted); font-size: .75rem; }
 .empty-state { padding: 25px 12px; color: var(--muted); text-align: center; font-size: .84rem; }
+
+@media (min-width: 720px) {
+  .health-charts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 .weekly-summary-card { border-color: rgba(85, 167, 255, .25); }
 .weekly-summary-card .card-title-row { align-items: flex-start; }

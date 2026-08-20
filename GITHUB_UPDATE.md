@@ -15,7 +15,7 @@
    - `sw.js`,
    - katalog `icons`,
    - katalog `supabase`.
-6. Commit message: `P80 V14 - zamknięcie dnia o północy`.
+6. Commit message: `P80 V15 - wykresy masy glukozy i ketonów`.
 7. Wybierz `Commit changes`.
 
 GitHub Pages powinien wdrożyć zmianę automatycznie. Status sprawdzisz w `Actions` albo `Deployments → github-pages`.
