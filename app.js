@@ -1229,7 +1229,16 @@
 
   function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js").catch(error => console.warn("Service worker:", error));
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (refreshing) return;
+        refreshing = true;
+        window.location.reload();
+      });
+      navigator.serviceWorker
+        .register("./sw.js?v=6", { updateViaCache: "none" })
+        .then(registration => registration.update())
+        .catch(error => console.warn("Service worker:", error));
     }
   }
 
