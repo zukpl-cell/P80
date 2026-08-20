@@ -83,7 +83,8 @@
       "validationBox", "saveDraftButton", "closeReportButton", "evaluationCard",
       "evaluationVerdict", "evaluationHeadline", "evaluationDetails", "historyStats",
       "historyList", "exportButton", "weeklyPlan", "cloudStatus", "authCard",
-      "authEmail", "loginButton", "logoutButton", "authMessage", "installButton",
+      "authEmail", "authPassword", "loginButton", "setPasswordButton", "magicLinkButton",
+      "logoutButton", "authMessage", "installButton",
       "entryDialog", "entryForm", "entryDialogTitle", "closeEntryDialog", "entryId",
       "entryType", "entryTime", "entryDescription", "entryGrams", "entryCalories",
       "entryNetCarbs", "entryPhoto", "entryPhotoPreview", "entryValidation",
@@ -107,7 +108,9 @@
     el.saveDraftButton.addEventListener("click", () => saveDraft(true));
     el.closeReportButton.addEventListener("click", closeReport);
     el.exportButton.addEventListener("click", exportReports);
-    el.loginButton.addEventListener("click", loginWithMagicLink);
+    el.loginButton.addEventListener("click", loginWithPassword);
+    el.setPasswordButton.addEventListener("click", setAccountPassword);
+    el.magicLinkButton.addEventListener("click", loginWithMagicLink);
     el.logoutButton.addEventListener("click", logout);
     el.installButton.addEventListener("click", installPwa);
 
@@ -1008,7 +1011,11 @@
     el.syncBadge.className = loggedIn ? "badge badge-success" : "badge badge-muted";
     el.logoutButton.hidden = !loggedIn;
     el.loginButton.hidden = loggedIn || !configured;
+    el.magicLinkButton.hidden = loggedIn || !configured;
+    el.setPasswordButton.hidden = !loggedIn || !configured;
     el.authEmail.disabled = loggedIn || !configured;
+    el.authPassword.disabled = !configured;
+    if (loggedIn && state.user.email) el.authEmail.value = state.user.email;
     el.cloudStatus.innerHTML = `
       <div class="status-line"><span>Konfiguracja Supabase</span><strong>${configured ? "gotowa" : "oczekuje"}</strong></div>
       <div class="status-line"><span>Użytkownik</span><strong>${loggedIn ? escapeHtml(state.user.email || "zalogowany") : "niezalogowany"}</strong></div>
@@ -1027,11 +1034,55 @@
       el.authMessage.textContent = "Wpisz adres e-mail.";
       return;
     }
-    el.loginButton.disabled = true;
+    el.magicLinkButton.disabled = true;
     const redirectTo = `${window.location.origin}${window.location.pathname}`;
-    const { error } = await state.supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
+    const { error } = await state.supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: true, emailRedirectTo: redirectTo }
+    });
+    el.magicLinkButton.disabled = false;
+    if (error) {
+      el.authMessage.textContent = `Błąd: ${error.message}`;
+      return;
+    }
+    el.authMessage.textContent = "Link startowy został wysłany. Otwórz go w Safari, a następnie ustaw hasło w aplikacji.";
+  }
+
+  async function loginWithPassword() {
+    if (!state.supabase) return;
+    const email = el.authEmail.value.trim();
+    const password = el.authPassword.value;
+    if (!email || password.length < 8) {
+      el.authMessage.textContent = "Wpisz e-mail oraz hasło mające co najmniej 8 znaków.";
+      return;
+    }
+    el.loginButton.disabled = true;
+    const { data, error } = await state.supabase.auth.signInWithPassword({ email, password });
     el.loginButton.disabled = false;
-    el.authMessage.textContent = error ? `Błąd: ${error.message}` : "Link logowania został wysłany. Sprawdź pocztę.";
+    if (error || !data.session) {
+      el.authMessage.textContent = `Logowanie nie powiodło się: ${error?.message || "sprawdź dane"}`;
+      return;
+    }
+    el.authPassword.value = "";
+    el.authMessage.textContent = "Zalogowano. Synchronizacja chmury jest aktywna.";
+  }
+
+  async function setAccountPassword() {
+    if (!state.supabase || !state.user) return;
+    const password = el.authPassword.value;
+    if (password.length < 8) {
+      el.authMessage.textContent = "Nowe hasło musi mieć co najmniej 8 znaków.";
+      return;
+    }
+    el.setPasswordButton.disabled = true;
+    const { error } = await state.supabase.auth.updateUser({ password });
+    el.setPasswordButton.disabled = false;
+    if (error) {
+      el.authMessage.textContent = `Nie udało się ustawić hasła: ${error.message}`;
+      return;
+    }
+    el.authPassword.value = "";
+    el.authMessage.textContent = "Hasło zapisane. Możesz nim zalogować zainstalowaną aplikację.";
   }
 
   async function logout() {

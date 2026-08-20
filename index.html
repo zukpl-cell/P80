@@ -366,11 +366,16 @@
 
       <article id="authCard" class="card">
         <h3>Logowanie prywatne</h3>
-        <p class="helper">Po podłączeniu Supabase wpisz e-mail. Otrzymasz bezpieczny link logowania.</p>
+        <p class="helper">Na iPhonie loguj się bezpośrednio w aplikacji e-mailem i hasłem. Link startowy służy tylko do pierwszego wejścia przez Safari.</p>
         <label>Adres e-mail
           <input id="authEmail" type="email" autocomplete="email" placeholder="twoj@email.pl">
         </label>
-        <button id="loginButton" class="primary-action" type="button">Wyślij link logowania</button>
+        <label>Hasło
+          <input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="minimum 8 znaków">
+        </label>
+        <button id="loginButton" class="primary-action" type="button">Zaloguj</button>
+        <button id="setPasswordButton" class="primary-action" type="button" hidden>Ustaw lub zmień hasło</button>
+        <button id="magicLinkButton" class="secondary-button" type="button">Wyślij link startowy</button>
         <button id="logoutButton" class="secondary-button" type="button" hidden>Wyloguj</button>
         <div id="authMessage" class="inline-message" aria-live="polite"></div>
       </article>

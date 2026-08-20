@@ -36,6 +36,16 @@ Plik SQL włącza Row Level Security. Każdy zalogowany użytkownik może widzie
 
 4. Zapisz zmiany.
 
+### Pierwsze logowanie na iPhonie
+
+Safari i zainstalowana PWA mogą przechowywać oddzielne sesje. Dlatego:
+
+1. Za pierwszym razem użyj w aplikacji przycisku `Wyślij link startowy` i otwórz wiadomość w Safari.
+2. W zalogowanej stronie wejdź w `Ustawienia`, wpisz własne hasło (minimum 8 znaków) i wybierz `Ustaw lub zmień hasło`.
+3. Otwórz PWA i zaloguj się tym samym e-mailem oraz ustawionym hasłem.
+
+Nie trzeba konfigurować własnego SMTP ani zmieniać szablonów wiadomości.
+
 ## 4. Uzupełnij publiczną konfigurację aplikacji
 
 1. Otwórz `Project Settings → API`.

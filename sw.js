@@ -1,4 +1,4 @@
-const CACHE = "p80-v2-1";
+const CACHE = "p80-v2-3";
 const APP_SHELL = [
   "./",
   "./index.html",
