@@ -15,7 +15,7 @@
    - `sw.js`,
    - katalog `icons`,
    - katalog `supabase`.
-6. Commit message: `P80 V12 - grzyby enoki boczniaki i shimeji`.
+6. Commit message: `P80 V13 - nowa ikona aplikacji`.
 7. Wybierz `Commit changes`.
 
 GitHub Pages powinien wdrożyć zmianę automatycznie. Status sprawdzisz w `Actions` albo `Deployments → github-pages`.
@@ -24,7 +24,7 @@ GitHub Pages powinien wdrożyć zmianę automatycznie. Status sprawdzisz w `Acti
 
 1. Otwórz `https://zukpl-cell.github.io/P80/`.
 2. Jeżeli nadal widzisz starą wersję, odśwież stronę bez cache lub zamknij aplikację z ekranu ostatnich aplikacji i uruchom ponownie.
-3. Na telefonie może być konieczne usunięcie starego skrótu i ponowne wybranie `Dodaj do ekranu głównego`.
+3. Aby iPhone pokazał nową ikonę, usuń stary skrót P80 z ekranu początkowego, otwórz stronę w Safari i ponownie wybierz `Udostępnij → Do ekranu początkowego`.
 
 ## Cofnięcie zmiany
 

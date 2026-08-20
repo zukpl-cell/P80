@@ -1613,7 +1613,7 @@
         window.location.reload();
       });
       navigator.serviceWorker
-        .register("./sw.js?v=12", { updateViaCache: "none" })
+        .register("./sw.js?v=13", { updateViaCache: "none" })
         .then(registration => registration.update())
         .catch(error => console.warn("Service worker:", error));
     }
