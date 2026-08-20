@@ -1,237 +1,454 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>P80</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-body{margin:0;font-family:Arial;background:#0f0f0f;color:white}
-.container{padding:20px}
-button{width:100%;padding:14px;margin:6px 0;background:#ff3c00;border:none;color:white;font-size:15px;border-radius:8px}
-.card{background:#1c1c1c;padding:15px;border-radius:10px;margin-bottom:12px}
-h1{text-align:center}
-a{color:#ff7a00;text-decoration:none}
-.green{color:#00ff88}
-.yellow{color:#ffd000}
-.red{color:#ff4d4d}
-.small{font-size:13px;opacity:0.8}
-details{margin-bottom:10px}
-hr{border:0;border-top:1px solid #333;margin:12px 0}
-input{padding:8px;border-radius:6px;border:none;margin:5px 0;width:100%}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d10">
+  <meta name="description" content="P80 — codzienny raport projektu 80 kg">
+  <title>P80 — Projekt 80 kg</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="./config.js"></script>
+  <script defer src="./app.js"></script>
 </head>
-
 <body>
-<div class="container">
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">PROJEKT 80 KG</p>
+      <h1>P80</h1>
+    </div>
+    <div id="syncBadge" class="badge badge-muted" aria-live="polite">Tryb lokalny</div>
+  </header>
 
-<h1>P80</h1>
+  <main class="app-shell">
+    <section id="setupBanner" class="notice" hidden>
+      <div>
+        <strong>Tryb przygotowawczy</strong>
+        <p>Dane zapisują się tylko na tym urządzeniu. Po konfiguracji Supabase włączymy prywatną synchronizację i zdjęcia.</p>
+      </div>
+      <button class="link-button" data-nav="settings">Konfiguracja</button>
+    </section>
 
-<div class="card">
-<div id="summary"></div>
-<div id="trainingSummary"></div>
-<div id="analysisBox"></div>
-</div>
+    <section id="view-dashboard" class="view active" aria-labelledby="dashboardTitle">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow" id="todayLabel">DZISIAJ</p>
+          <h2 id="dashboardTitle">Kontrola dnia</h2>
+        </div>
+        <span id="deadlineBadge" class="deadline">Raport do 20:00</span>
+      </div>
 
-<button onclick="show('analysis')">📊 Analiza</button>
-<button onclick="show('diet')">🍳 Dieta</button>
-<button onclick="show('training')">🏋️ Trening</button>
-<button onclick="show('checkin')">📝 Niedzielny Check-in</button>
+      <div id="overdueBox" class="alert alert-danger" hidden>
+        <strong>Raport nie został zamknięty.</strong>
+        <span>Brak raportu oznacza dzień NIEDOWIEZIONY.</span>
+      </div>
 
-<div id="content"></div>
+      <div class="metrics-grid">
+        <article class="metric-card metric-primary">
+          <span>Aktualna masa</span>
+          <strong id="currentWeight">—</strong>
+          <small id="weightDelta">Start: 90,0 kg</small>
+        </article>
+        <article class="metric-card">
+          <span>Do celu</span>
+          <strong id="toGoal">10,0 kg</strong>
+          <small>Cel: 80,0 kg</small>
+        </article>
+        <article class="metric-card">
+          <span>Seria</span>
+          <strong id="streakValue">0 dni</strong>
+          <small>Dowiezione z rzędu</small>
+        </article>
+        <article class="metric-card">
+          <span>Dzisiejszy wynik</span>
+          <strong id="todayVerdict" class="verdict-neutral">OTWARTY</strong>
+          <small id="todayCalories">0 / 1900 kcal</small>
+        </article>
+      </div>
 
-<script>
+      <article class="card progress-card">
+        <div class="progress-copy">
+          <span>Droga 90 → 80 kg</span>
+          <strong id="progressPercent">0%</strong>
+        </div>
+        <div class="progress-track" aria-label="Realizacja celu masy">
+          <div id="progressBar" class="progress-bar"></div>
+        </div>
+      </article>
 
-const goal = 80;
+      <button class="primary-action" data-nav="report">
+        <span>Otwórz raport dnia</span>
+        <span aria-hidden="true">→</span>
+      </button>
 
-const baseEntries = [
-{date:"2026-01-01",weight:100},
-{date:"2026-01-07",weight:95.10},
-{date:"2026-01-17",weight:93.25},
-{date:"2026-01-24",weight:92.30},
-{date:"2026-01-31",weight:92.50},
-{date:"2026-02-13",weight:91.05},
-{date:"2026-02-19",weight:90.70},
-{date:"2026-02-28",weight:89.00},
-{date:"2026-03-01",weight:88.65}
-];
+      <article class="card chart-card">
+        <div class="card-title-row">
+          <div>
+            <p class="eyebrow">TREND</p>
+            <h3>Masa ciała</h3>
+          </div>
+          <span class="muted">ostatnie 30 wpisów</span>
+        </div>
+        <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
+      </article>
 
-let extraEntries = JSON.parse(localStorage.getItem("p80extra")) || [];
-let trainings = JSON.parse(localStorage.getItem("p80trainings")) || {};
-let savedWeek = localStorage.getItem("p80week") || "";
+      <article class="card">
+        <div class="card-title-row">
+          <div>
+            <p class="eyebrow">OSTATNIE DNI</p>
+            <h3>Realizacja</h3>
+          </div>
+        </div>
+        <div id="recentDays" class="recent-list"></div>
+      </article>
+    </section>
 
-function getAllEntries(){
-  return [...baseEntries, ...extraEntries];
-}
+    <section id="view-report" class="view" aria-labelledby="reportTitle">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">PEŁNY RAPORT</p>
+          <h2 id="reportTitle">Raport dnia</h2>
+        </div>
+        <input id="reportDate" class="date-control" type="date" aria-label="Data raportu">
+      </div>
 
-function getWeekNumber(d){
-  d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
-  var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-  return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
-}
+      <div id="closedBanner" class="alert alert-success" hidden></div>
 
-function resetIfNewWeek(){
-  let now = new Date();
-  let week = now.getFullYear()+"-"+getWeekNumber(now);
-  if(savedWeek !== week){
-    trainings = {};
-    localStorage.setItem("p80trainings",JSON.stringify(trainings));
-    localStorage.setItem("p80week",week);
-  }
-}
+      <form id="reportForm" novalidate>
+        <article class="card form-card">
+          <div class="card-title-row">
+            <div>
+              <p class="step-number">01</p>
+              <h3>Pomiary rano</h3>
+            </div>
+            <span class="required-note">* obowiązkowe</span>
+          </div>
+          <div class="form-grid">
+            <label>Masa ciała (kg) *
+              <input id="weight" name="weight" type="number" min="40" max="200" step="0.05" inputmode="decimal" required placeholder="np. 90,10">
+            </label>
+            <label>Glukoza (mg/dl)
+              <input id="glucose" name="glucose" type="number" min="20" max="500" step="1" inputmode="numeric" placeholder="opcjonalnie">
+            </label>
+            <label>Ketony (mmol/l)
+              <input id="ketones" name="ketones" type="number" min="0" max="10" step="0.1" inputmode="decimal" placeholder="opcjonalnie">
+            </label>
+            <label>Zdjęcie wagi
+              <input id="weightPhoto" name="weightPhoto" type="file" accept="image/*" capture="environment">
+            </label>
+          </div>
+          <div id="weightPhotoPreview" class="photo-preview"></div>
+        </article>
 
-function updateSummary(){
-  let entries = getAllEntries();
-  let start = entries[0].weight;
-  let current = entries[entries.length-1].weight;
-  let lost = (start-current).toFixed(2);
-  let percent = ((lost/(start-goal))*100).toFixed(1);
+        <article class="card form-card">
+          <div class="card-title-row">
+            <div>
+              <p class="step-number">02</p>
+              <h3>Jedzenie i napoje</h3>
+            </div>
+            <button id="addEntryButton" class="secondary-button compact" type="button">+ Dodaj pozycję</button>
+          </div>
+          <p class="helper">Wpisujemy wszystko: posiłki, kawę, dodatki, przekąski, napoje i alkohol. Zdjęcie nie zastępuje gramatury.</p>
+          <div id="entriesList" class="entries-list"></div>
+          <div class="calorie-total">
+            <span>Suma dnia</span>
+            <strong><span id="calorieSum">0</span> / 1900 kcal</strong>
+          </div>
+          <label class="check-row critical-check">
+            <input id="allFoodConfirmed" type="checkbox">
+            <span>Potwierdzam, że wpisałem całe jedzenie i wszystkie napoje.</span>
+          </label>
+        </article>
 
-  document.getElementById("summary").innerHTML =
-  `<b>Start:</b> ${start} kg<br>
-   <b>Aktualnie:</b> ${current} kg<br>
-   <b>Spadek:</b> ${lost} kg<br>
-   <b>Realizacja celu:</b> ${percent}%`;
+        <article class="card form-card">
+          <div class="card-title-row">
+            <div>
+              <p class="step-number">03</p>
+              <h3>Ruch i trening</h3>
+            </div>
+            <span id="gymPlanBadge" class="badge badge-muted">Dziś bez siłowni</span>
+          </div>
+          <div class="form-grid">
+            <label>Trening domowy (min)
+              <input id="homeMinutes" type="number" min="0" max="180" step="1" inputmode="numeric" value="0">
+            </label>
+            <label>Siłownia (min)
+              <input id="gymMinutes" type="number" min="0" max="240" step="1" inputmode="numeric" value="0">
+            </label>
+            <label>Rower (km)
+              <input id="bikeKm" type="number" min="0" max="300" step="0.1" inputmode="decimal" value="0">
+            </label>
+            <label>Rower (min)
+              <input id="bikeMinutes" type="number" min="0" max="600" step="1" inputmode="numeric" value="0">
+            </label>
+            <label>Kroki
+              <input id="steps" type="number" min="0" max="100000" step="1" inputmode="numeric" value="0">
+            </label>
+            <label>Sesja siłowni
+              <select id="gymSession">
+                <option value="">Brak</option>
+                <option value="A">Plan A</option>
+                <option value="B">Plan B</option>
+                <option value="C">Plan C</option>
+              </select>
+            </label>
+          </div>
+          <div id="gymExercisesPanel" class="gym-panel" hidden>
+            <p class="helper">Zaznacz wykonane ćwiczenia i wpisz serie, powtórzenia oraz obciążenie.</p>
+            <div id="gymExercisesList" class="gym-exercises"></div>
+          </div>
+          <p class="helper">Jeżeli ból rano wynosi co najmniej 5/10 albo promieniowanie wyraźnie rośnie, nie nadrabiamy treningu za wszelką cenę. Opisz bezpieczną modyfikację w notatce.</p>
+          <label>Notatka treningowa
+            <textarea id="trainingNotes" rows="3" placeholder="Co zrobiłem, intensywność, co zmieniłem z powodu lędźwi"></textarea>
+          </label>
+        </article>
 
-  updateTrainingSummary();
-  updateWeeklyAnalysis();
-}
+        <article class="card form-card">
+          <div class="card-title-row">
+            <div>
+              <p class="step-number">04</p>
+              <h3>Regeneracja i lędźwie</h3>
+            </div>
+          </div>
+          <div class="form-grid">
+            <label>Sen (godz.) *
+              <input id="sleepHours" type="number" min="0" max="16" step="0.25" inputmode="decimal" required>
+            </label>
+            <label>Głód 1–10 *
+              <input id="hunger" type="number" min="1" max="10" step="1" inputmode="numeric" required>
+            </label>
+            <label>Samopoczucie 1–10 *
+              <input id="mood" type="number" min="1" max="10" step="1" inputmode="numeric" required>
+            </label>
+            <label>Lędźwie rano 0–10 *
+              <input id="painMorning" type="number" min="0" max="10" step="1" inputmode="numeric" required>
+            </label>
+            <label>Lędźwie wieczorem 0–10 *
+              <input id="painEvening" type="number" min="0" max="10" step="1" inputmode="numeric" required>
+            </label>
+            <label>Promieniowanie *
+              <select id="radiation" required>
+                <option value="">Wybierz</option>
+                <option value="none">Brak</option>
+                <option value="minimal">Minimalne</option>
+                <option value="stronger">Wyraźnie większe</option>
+              </select>
+            </label>
+          </div>
+          <label>Trudny moment dnia *
+            <textarea id="difficultMoment" rows="3" required placeholder="Kiedy najłatwiej było odpuścić i co wtedy zrobiłem?"></textarea>
+          </label>
+          <label>Samopoczucie i uwagi
+            <textarea id="wellbeingNotes" rows="3" placeholder="Energia, stres, ból, sytuacje nietypowe"></textarea>
+          </label>
+        </article>
 
-function updateWeeklyAnalysis(){
-  let entries = getAllEntries();
-  if(entries.length < 2) return;
+        <article class="card form-card">
+          <div class="card-title-row">
+            <div>
+              <p class="step-number">05</p>
+              <h3>Zamknięcie dnia</h3>
+            </div>
+          </div>
+          <div class="choice-grid">
+            <label class="choice-card">
+              <input id="ketoYes" type="radio" name="keto" value="yes" required>
+              <span>Keto utrzymane</span>
+            </label>
+            <label class="choice-card">
+              <input id="ketoNo" type="radio" name="keto" value="no">
+              <span>Keto przerwane</span>
+            </label>
+          </div>
+          <label>Gdzie odpuściłem? <span class="muted">(jeśli dotyczy)</span>
+            <textarea id="turningPoint" rows="3" placeholder="Konkretny moment i decyzja, bez usprawiedliwiania"></textarea>
+          </label>
+          <label>Działanie korygujące
+            <textarea id="correction" rows="3" placeholder="Co robię od następnego posiłku lub następnej decyzji?"></textarea>
+          </label>
+          <label class="check-row critical-check">
+            <input id="reportCompleteConfirmed" type="checkbox">
+            <span>Potwierdzam, że raport jest kompletny i zgodny z prawdą.</span>
+          </label>
+          <div id="validationBox" class="alert alert-danger" hidden></div>
+          <div class="button-stack">
+            <button id="saveDraftButton" class="secondary-button" type="button">Zapisz szkic</button>
+            <button id="closeReportButton" class="primary-action" type="button">Zamknij raport i wydaj werdykt</button>
+          </div>
+        </article>
+      </form>
 
-  let last = entries[entries.length-1];
-  let prev = entries[entries.length-2];
-  let diff = (prev.weight - last.weight).toFixed(2);
+      <article id="evaluationCard" class="card evaluation-card" hidden>
+        <p class="eyebrow">ROZLICZENIE DNIA</p>
+        <h3 id="evaluationVerdict">—</h3>
+        <p id="evaluationHeadline" class="evaluation-headline"></p>
+        <div id="evaluationDetails"></div>
+      </article>
+    </section>
 
-  let text="";
-  if(diff >=0.4 && diff<=0.8){
-    text=`<span class="green">🟢 Tempo: -${diff} kg / tydzień</span>`;
-  } else if(diff <0.3){
-    text=`<span class="yellow">🟡 Tempo: -${diff} kg → rozważ -100 kcal</span>`;
-  } else if(diff >1){
-    text=`<span class="red">🔴 Tempo: -${diff} kg → rozważ +100 kcal</span>`;
-  }
+    <section id="view-history" class="view" aria-labelledby="historyTitle">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">HISTORIA</p>
+          <h2 id="historyTitle">Raporty</h2>
+        </div>
+        <button id="exportButton" class="secondary-button compact" type="button">Eksport JSON</button>
+      </div>
+      <div id="historyStats" class="metrics-grid compact-grid"></div>
+      <div id="historyList" class="history-list"></div>
+    </section>
 
-  document.getElementById("analysisBox").innerHTML = text;
-}
+    <section id="view-plan" class="view" aria-labelledby="planTitle">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">SZTYWNY TYDZIEŃ</p>
+          <h2 id="planTitle">Plan 1900 kcal</h2>
+        </div>
+        <span class="badge badge-accent">KETO</span>
+      </div>
 
-function toggleTraining(day){
- trainings[day]=!trainings[day];
- localStorage.setItem("p80trainings",JSON.stringify(trainings));
- updateTrainingSummary();
-}
+      <article class="card plan-card">
+        <span class="plan-time">09:00</span>
+        <div>
+          <h3>Kawa kuloodporna</h3>
+          <p>10 g masła + 10 ml MCT</p>
+        </div>
+      </article>
+      <article class="card plan-card">
+        <span class="plan-time">OBIAD</span>
+        <div>
+          <h3>Kurczak i warzywa</h3>
+          <p>Kurczak 320 g, awokado 100 g, kalafior 100 g, brokuł 100 g, oliwa 30 g.</p>
+        </div>
+      </article>
+      <article class="card plan-card">
+        <span class="plan-time">KOLACJA</span>
+        <div>
+          <h3>Jajka i tuńczyk</h3>
+          <p>4 jajka, tuńczyk 220 g po odsączeniu, ogórek 150 g, oliwa 29 g. Bez majonezu.</p>
+        </div>
+      </article>
+      <div class="alert alert-info">
+        Wartości są punktem startowym. Kalorie aktualizujemy według etykiet produktów; korekty robimy oliwą lub MCT, nie białkiem.
+      </div>
 
-function updateTrainingSummary(){
- let count=0;
- ["pon","wt","sr","czw","pt"].forEach(d=>{
-  if(trainings[d]) count++;
- });
- document.getElementById("trainingSummary").innerHTML="🏋️ Treningi w tym tygodniu: "+count+"/5";
-}
+      <article class="card">
+        <div class="card-title-row">
+          <div>
+            <p class="eyebrow">TYDZIEŃ</p>
+            <h3>Ruch</h3>
+          </div>
+        </div>
+        <div id="weeklyPlan" class="weekly-plan"></div>
+      </article>
 
-function saveCheckin(){
- let w=parseFloat(document.getElementById("weight").value);
- let k=document.getElementById("ketones").value;
- let e=document.getElementById("energy").value;
- if(!w) return;
- extraEntries.push({date:new Date().toISOString().split("T")[0],weight:w,ketones:k,energy:e});
- localStorage.setItem("p80extra",JSON.stringify(extraEntries));
- location.reload();
-}
+      <article class="card danger-zone">
+        <h3>Lędźwie — wyłączone ćwiczenia</h3>
+        <p>Martwy ciąg, RDL, przysiad ze sztangą, hack squat/głęboka suwnica, wiosłowanie w opadzie, ab wheel, unoszenie nóg w zwisie i ciężkie wyciskanie nad głowę bez podparcia.</p>
+      </article>
+    </section>
 
-function show(section){
- let c=document.getElementById("content");
+    <section id="view-settings" class="view" aria-labelledby="settingsTitle">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">USTAWIENIA</p>
+          <h2 id="settingsTitle">Konto i synchronizacja</h2>
+        </div>
+      </div>
 
- if(section==="analysis"){
-  c.innerHTML=`<div class="card"><canvas id="chart"></canvas></div>`;
-  let ctx=document.getElementById("chart");
-  let entries=getAllEntries();
-  new Chart(ctx,{
-    type:'line',
-    data:{
-      labels:entries.map(e=>e.date),
-      datasets:[{data:entries.map(e=>e.weight),borderColor:'#ff3c00',tension:0.3}]
-    },
-    options:{plugins:{legend:{display:false}},
-    scales:{x:{ticks:{color:"white"}},y:{ticks:{color:"white"}}}}
-  });
- }
+      <article class="card">
+        <h3>Status</h3>
+        <div id="cloudStatus" class="status-list"></div>
+      </article>
 
- if(section==="diet"){
-  c.innerHTML=`
-  <div class="card">
-  <h2>IF 9:00–17:00 (1900 kcal)</h2>
+      <article id="authCard" class="card">
+        <h3>Logowanie prywatne</h3>
+        <p class="helper">Po podłączeniu Supabase wpisz e-mail. Otrzymasz bezpieczny link logowania.</p>
+        <label>Adres e-mail
+          <input id="authEmail" type="email" autocomplete="email" placeholder="twoj@email.pl">
+        </label>
+        <button id="loginButton" class="primary-action" type="button">Wyślij link logowania</button>
+        <button id="logoutButton" class="secondary-button" type="button" hidden>Wyloguj</button>
+        <div id="authMessage" class="inline-message" aria-live="polite"></div>
+      </article>
 
-  <details><summary>09:00 Śniadanie (~200 kcal)</summary>
-  Masło 15 g + MCT 10 g<br>
-  Zamienniki:<br>
-  2 jajka + masło 10 g<br>
-  Jogurt grecki 200 g + orzechy 20 g<br>
-  Halloumi 80 g + oliwa 10 g
-  </details>
+      <article class="card">
+        <h3>Parametry projektu</h3>
+        <dl class="definition-list">
+          <div><dt>Start</dt><dd>90,0 kg</dd></div>
+          <div><dt>Cel</dt><dd>80,0 kg</dd></div>
+          <div><dt>Limit</dt><dd>1900 kcal</dd></div>
+          <div><dt>Model</dt><dd>Keto</dd></div>
+          <div><dt>Raport</dt><dd>codziennie do 20:00</dd></div>
+        </dl>
+      </article>
 
-  <details><summary>13:00 Obiad (~720 kcal)</summary>
-  Kurczak 300 g + brokuł 300 g + oliwa 25 g<br>
-  Zamienniki:<br>
-  Polędwica / indyk / cielęcina / wołowina<br>
-  Cukinia / kalafior / szpinak
-  </details>
+      <article class="card">
+        <h3>Instalacja na telefonie</h3>
+        <p class="helper">W przeglądarce wybierz „Dodaj do ekranu głównego”. Aplikacja uruchomi się jak zwykła aplikacja mobilna.</p>
+        <button id="installButton" class="secondary-button" type="button" hidden>Zainstaluj P80</button>
+      </article>
+    </section>
+  </main>
 
-  <details><summary>16:30 Kolacja (~980 kcal)</summary>
-  Twaróg 300 g + mascarpone 60 g + masło orzechowe 20 g<br>
-  Zamienniki:<br>
-  4 jajka + ser żółty 80 g + oliwa 15 g<br>
-  Wołowina 250 g + ser 60 g + oliwa 10 g
-  </details>
+  <nav class="bottom-nav" aria-label="Główna nawigacja">
+    <button class="nav-button active" data-nav="dashboard"><span>⌂</span><small>Start</small></button>
+    <button class="nav-button" data-nav="report"><span>＋</span><small>Raport</small></button>
+    <button class="nav-button" data-nav="history"><span>▦</span><small>Historia</small></button>
+    <button class="nav-button" data-nav="plan"><span>◎</span><small>Plan</small></button>
+    <button class="nav-button" data-nav="settings"><span>⚙</span><small>Ustawienia</small></button>
+  </nav>
 
-  <hr>
-  Suplementacja:<br>
-  9:00 – B12, Chrom, Elektrolity, Kreatyna<br>
-  13:00 – Omega-3, D3+K2, C, Żelazo<br>
-  16:30 – Maślan sodu<br>
-  21:00 – Magnez
-  </div>`;
- }
+  <dialog id="entryDialog">
+    <form id="entryForm" method="dialog" class="dialog-card">
+      <div class="card-title-row">
+        <div>
+          <p class="eyebrow">JEDZENIE I NAPOJE</p>
+          <h3 id="entryDialogTitle">Dodaj pozycję</h3>
+        </div>
+        <button id="closeEntryDialog" class="icon-button" type="button" aria-label="Zamknij">×</button>
+      </div>
+      <input id="entryId" type="hidden">
+      <div class="form-grid">
+        <label>Rodzaj *
+          <select id="entryType" required>
+            <option value="meal">Posiłek</option>
+            <option value="snack">Przekąska</option>
+            <option value="drink">Napój</option>
+            <option value="alcohol">Alkohol</option>
+            <option value="supplement">Dodatek/suplement kaloryczny</option>
+          </select>
+        </label>
+        <label>Godzina *
+          <input id="entryTime" type="time" required>
+        </label>
+      </div>
+      <label>Opis *
+        <textarea id="entryDescription" rows="3" required placeholder="Produkty i ich gramatury"></textarea>
+      </label>
+      <div class="form-grid">
+        <label>Łączna masa (g/ml)
+          <input id="entryGrams" type="number" min="0" step="1" inputmode="numeric">
+        </label>
+        <label>Kalorie *
+          <input id="entryCalories" type="number" min="0" max="5000" step="1" inputmode="numeric" required>
+        </label>
+        <label>Węglowodany netto (g)
+          <input id="entryNetCarbs" type="number" min="0" max="500" step="0.1" inputmode="decimal">
+        </label>
+        <label>Zdjęcie
+          <input id="entryPhoto" type="file" accept="image/*" capture="environment">
+        </label>
+      </div>
+      <div id="entryPhotoPreview" class="photo-preview"></div>
+      <div id="entryValidation" class="alert alert-danger" hidden></div>
+      <button id="saveEntryButton" class="primary-action" type="button">Zapisz pozycję</button>
+    </form>
+  </dialog>
 
- if(section==="training"){
-  c.innerHTML=`
-  ${day("Pon","pon")}
-  ${day("Wt","wt")}
-  ${day("Śr","sr")}
-  ${day("Czw","czw")}
-  ${day("Pt","pt")}
-  `;
- }
-
- if(section==="checkin"){
-  c.innerHTML=`
-  <div class="card">
-  <input id="weight" placeholder="Waga">
-  <input id="ketones" placeholder="Ketony">
-  <input id="energy" placeholder="Energia 1-5">
-  <button onclick="saveCheckin()">Zapisz</button>
-  </div>`;
- }
-}
-
-function day(name,key){
- return `
- <details>
- <summary>${name}</summary>
- <div class="card">
-  Trening wg planu<br>
-  <input type="checkbox" ${trainings[key]?"checked":""}
-  onclick="toggleTraining('${key}')"> Zrobione
- </div>
- </details>`;
-}
-
-resetIfNewWeek();
-updateSummary();
-
-</script>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
