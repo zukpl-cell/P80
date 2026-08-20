@@ -434,6 +434,25 @@
       <label>Opis *
         <textarea id="entryDescription" rows="3" required placeholder="Produkty i ich gramatury"></textarea>
       </label>
+      <section class="food-calculator" aria-labelledby="foodCalculatorTitle">
+        <div class="calculator-heading">
+          <div>
+            <strong id="foodCalculatorTitle">Kalkulator składników</strong>
+            <span>Wartości orientacyjne — etykieta produktu ma pierwszeństwo.</span>
+          </div>
+        </div>
+        <div class="ingredient-controls">
+          <label>Produkt
+            <select id="ingredientProduct"></select>
+          </label>
+          <label>Ilość
+            <input id="ingredientAmount" type="number" min="0.1" step="0.1" inputmode="decimal" placeholder="np. 10">
+          </label>
+          <button id="addIngredientButton" class="secondary-button compact" type="button">Dodaj składnik</button>
+        </div>
+        <div id="ingredientHint" class="ingredient-hint"></div>
+        <div id="ingredientsList" class="ingredients-list"></div>
+      </section>
       <div class="form-grid">
         <label>Łączna masa (g/ml)
           <input id="entryGrams" type="number" min="0" step="1" inputmode="numeric">

@@ -11,6 +11,24 @@
     alcohol: "Alkohol",
     supplement: "Dodatek"
   };
+  const FOOD_DATABASE = {
+    butter: { name: "Masło", unit: "g", kcal: 7.35, carbs: 0.006 },
+    mct: { name: "Olej MCT", unit: "ml", kcal: 8.3, carbs: 0 },
+    coffee: { name: "Kawa czarna", unit: "ml", kcal: 0.008, carbs: 0 },
+    chicken: { name: "Pierś z kurczaka (surowa)", unit: "g", kcal: 1.2, carbs: 0 },
+    avocado: { name: "Awokado — miąższ", unit: "g", kcal: 1.6, carbs: 0.018 },
+    cauliflower: { name: "Kalafior", unit: "g", kcal: 0.25, carbs: 0.03 },
+    broccoli: { name: "Brokuł", unit: "g", kcal: 0.34, carbs: 0.04 },
+    oliveOil: { name: "Oliwa", unit: "g", kcal: 8.84, carbs: 0 },
+    egg: { name: "Jajko M", unit: "szt.", kcal: 78, carbs: 0.6 },
+    tuna: { name: "Tuńczyk w zalewie — odsączony", unit: "g", kcal: 1.16, carbs: 0 },
+    cucumber: { name: "Ogórek", unit: "g", kcal: 0.15, carbs: 0.018 },
+    bacon: { name: "Boczek", unit: "g", kcal: 5.41, carbs: 0.014 },
+    porkNeck: { name: "Karkówka wieprzowa (surowa)", unit: "g", kcal: 2.67, carbs: 0 },
+    cottageCheese: { name: "Twaróg półtłusty", unit: "g", kcal: 1.33, carbs: 0.035 },
+    mozzarella: { name: "Mozzarella", unit: "g", kcal: 2.53, carbs: 0.02 },
+    olives: { name: "Oliwki zielone", unit: "g", kcal: 1.45, carbs: 0.008 }
+  };
   const GYM_PLANS = {
     A: [
       "Uginanie nóg siedząc",
@@ -48,6 +66,7 @@
     chart: null,
     saveTimer: null,
     pendingEntryFile: null,
+    pendingIngredients: [],
     pendingWeightFile: null,
     installPrompt: null
   };
@@ -88,7 +107,8 @@
       "entryDialog", "entryForm", "entryDialogTitle", "closeEntryDialog", "entryId",
       "entryType", "entryTime", "entryDescription", "entryGrams", "entryCalories",
       "entryNetCarbs", "entryPhoto", "entryPhotoPreview", "entryValidation",
-      "saveEntryButton", "toast"
+      "ingredientProduct", "ingredientAmount", "addIngredientButton", "ingredientHint",
+      "ingredientsList", "saveEntryButton", "toast"
     ];
     ids.forEach(id => { el[id] = document.getElementById(id); });
   }
@@ -103,6 +123,8 @@
     el.closeEntryDialog.addEventListener("click", closeEntryDialog);
     el.saveEntryButton.addEventListener("click", saveEntryFromDialog);
     el.entryPhoto.addEventListener("change", handleEntryPhotoPreview);
+    el.ingredientProduct.addEventListener("change", renderIngredientHint);
+    el.addIngredientButton.addEventListener("click", addIngredient);
     el.weightPhoto.addEventListener("change", handleWeightPhoto);
     el.gymSession.addEventListener("change", () => renderGymExercises(el.gymSession.value));
     el.saveDraftButton.addEventListener("click", () => saveDraft(true));
@@ -496,6 +518,9 @@
     if (state.currentReport?.closed) return;
     const entry = state.currentReport.entries.find(item => item.id === entryId);
     state.pendingEntryFile = null;
+    state.pendingIngredients = Array.isArray(entry?.ingredients)
+      ? entry.ingredients.map(item => ({ ...item }))
+      : [];
     el.entryDialogTitle.textContent = entry ? "Edytuj pozycję" : "Dodaj pozycję";
     el.entryId.value = entry?.id || "";
     el.entryType.value = entry?.type || "meal";
@@ -505,6 +530,9 @@
     el.entryCalories.value = valueOrBlank(entry?.calories);
     el.entryNetCarbs.value = valueOrBlank(entry?.netCarbs);
     el.entryPhoto.value = "";
+    populateFoodDatabase();
+    el.ingredientAmount.value = "";
+    renderIngredientsCalculator();
     renderEntryPhotoPreview(entry?.photoPreview);
     el.entryValidation.hidden = true;
     el.entryDialog.showModal();
@@ -512,7 +540,83 @@
 
   function closeEntryDialog() {
     state.pendingEntryFile = null;
+    state.pendingIngredients = [];
     el.entryDialog.close();
+  }
+
+  function populateFoodDatabase() {
+    if (el.ingredientProduct.options.length) return;
+    el.ingredientProduct.innerHTML = Object.entries(FOOD_DATABASE)
+      .map(([id, product]) => `<option value="${id}">${escapeHtml(product.name)}</option>`)
+      .join("");
+    renderIngredientHint();
+  }
+
+  function renderIngredientHint() {
+    const product = FOOD_DATABASE[el.ingredientProduct.value] || Object.values(FOOD_DATABASE)[0];
+    if (!product) return;
+    el.ingredientHint.textContent = `Podaj ilość w ${product.unit}.`;
+  }
+
+  function addIngredient() {
+    const productId = el.ingredientProduct.value;
+    const product = FOOD_DATABASE[productId];
+    const amount = numberOrNull(el.ingredientAmount.value);
+    if (!product || amount === null || amount <= 0) {
+      showEntryError("Wybierz produkt i podaj jego ilość.");
+      return;
+    }
+    state.pendingIngredients.push({
+      id: crypto.randomUUID(),
+      productId,
+      name: product.name,
+      amount,
+      unit: product.unit,
+      calories: Math.round(amount * product.kcal),
+      netCarbs: Math.round(amount * product.carbs * 10) / 10
+    });
+    el.ingredientAmount.value = "";
+    el.entryValidation.hidden = true;
+    applyIngredientTotals();
+    renderIngredientsCalculator();
+  }
+
+  function removeIngredient(id) {
+    state.pendingIngredients = state.pendingIngredients.filter(item => item.id !== id);
+    applyIngredientTotals();
+    renderIngredientsCalculator();
+  }
+
+  function applyIngredientTotals() {
+    if (!state.pendingIngredients.length) return;
+    const calories = state.pendingIngredients.reduce((sum, item) => sum + numberOrZero(item.calories), 0);
+    const carbs = state.pendingIngredients.reduce((sum, item) => sum + numberOrZero(item.netCarbs), 0);
+    const measurableMass = state.pendingIngredients
+      .filter(item => item.unit === "g" || item.unit === "ml")
+      .reduce((sum, item) => sum + numberOrZero(item.amount), 0);
+    el.entryCalories.value = Math.round(calories);
+    el.entryNetCarbs.value = (Math.round(carbs * 10) / 10).toString();
+    if (measurableMass) el.entryGrams.value = Math.round(measurableMass);
+    el.entryDescription.value = state.pendingIngredients
+      .map(item => `${item.name} ${numberFormat(item.amount, item.amount % 1 ? 1 : 0)} ${item.unit}`)
+      .join(", ");
+  }
+
+  function renderIngredientsCalculator() {
+    if (!state.pendingIngredients.length) {
+      el.ingredientsList.innerHTML = '<div class="ingredient-hint">Dodaj składniki, a kalorie i węglowodany uzupełnią się automatycznie.</div>';
+      return;
+    }
+    el.ingredientsList.innerHTML = state.pendingIngredients.map(item => `
+      <div class="ingredient-row">
+        <span>${escapeHtml(item.name)} · ${numberFormat(item.amount, item.amount % 1 ? 1 : 0)} ${escapeHtml(item.unit)}</span>
+        <strong>${numberFormat(item.calories, 0)} kcal</strong>
+        <button class="icon-button" type="button" data-remove-ingredient="${item.id}" aria-label="Usuń składnik">×</button>
+      </div>
+    `).join("");
+    el.ingredientsList.querySelectorAll("[data-remove-ingredient]").forEach(button => {
+      button.addEventListener("click", () => removeIngredient(button.dataset.removeIngredient));
+    });
   }
 
   async function handleEntryPhotoPreview(event) {
@@ -547,6 +651,7 @@
         grams: numberOrNull(el.entryGrams.value),
         calories,
         netCarbs: numberOrNull(el.entryNetCarbs.value),
+        ingredients: state.pendingIngredients.map(item => ({ ...item })),
         photoPath: existing?.photoPath || null,
         photoPreview: existing?.photoPreview || null
       };
