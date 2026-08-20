@@ -269,6 +269,11 @@ textarea { resize: vertical; min-height: 82px; }
 .calculator-heading span, .ingredient-hint { display: block; margin-top: 3px; color: var(--muted); font-size: .69rem; line-height: 1.4; }
 .ingredient-controls { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(90px, .7fr); gap: 9px; align-items: end; }
 .ingredient-controls button { grid-column: 1 / -1; }
+.delete-custom-product { margin-top: 7px; padding: 0; color: var(--red); }
+.custom-product-card { margin-top: 11px; padding: 11px; border: 1px solid var(--border); border-radius: 12px; background: rgba(85, 167, 255, .04); }
+.custom-product-card summary { cursor: pointer; color: #a9cfff; font-size: .76rem; font-weight: 800; }
+.custom-product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 11px; }
+.custom-product-card .secondary-button { margin-top: 8px; }
 .ingredients-list { display: grid; gap: 7px; margin-top: 10px; }
 .ingredient-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 8px 9px; border-radius: 10px; background: var(--surface); font-size: .73rem; }
 .ingredient-row strong { color: var(--accent-2); white-space: nowrap; }
@@ -365,6 +370,7 @@ dialog::backdrop { background: rgba(0, 0, 0, .75); backdrop-filter: blur(5px); }
 @media (max-width: 440px) {
   .app-shell { padding-left: 12px; padding-right: 12px; }
   .form-grid { grid-template-columns: 1fr; }
+  .custom-product-grid { grid-template-columns: 1fr; }
   .choice-grid { grid-template-columns: 1fr; }
   .metric-card { min-height: 108px; }
   .section-heading { align-items: flex-start; }

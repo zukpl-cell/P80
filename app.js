@@ -4,6 +4,7 @@
   const CONFIG = window.P80_CONFIG || {};
   const PROJECT = CONFIG.project || {};
   const LOCAL_KEY = "p80-v2-reports";
+  const CUSTOM_FOODS_KEY = "p80-v2-custom-foods";
   const TYPE_LABELS = {
     meal: "Posiłek",
     snack: "Przekąska",
@@ -11,23 +12,61 @@
     alcohol: "Alkohol",
     supplement: "Dodatek"
   };
+  const FOOD_CATEGORY_LABELS = {
+    custom: "Moje produkty",
+    meat: "Mięso i jaja",
+    fish: "Ryby i owoce morza",
+    dairy: "Nabiał",
+    vegetables: "Warzywa",
+    fats: "Tłuszcze",
+    nuts: "Orzechy i pestki",
+    drinks: "Napoje"
+  };
   const FOOD_DATABASE = {
-    butter: { name: "Masło", unit: "g", kcal: 7.35, carbs: 0.006 },
-    mct: { name: "Olej MCT", unit: "ml", kcal: 8.3, carbs: 0 },
-    coffee: { name: "Kawa czarna", unit: "ml", kcal: 0.008, carbs: 0 },
-    chicken: { name: "Pierś z kurczaka (surowa)", unit: "g", kcal: 1.2, carbs: 0 },
-    avocado: { name: "Awokado — miąższ", unit: "g", kcal: 1.6, carbs: 0.018 },
-    cauliflower: { name: "Kalafior", unit: "g", kcal: 0.25, carbs: 0.03 },
-    broccoli: { name: "Brokuł", unit: "g", kcal: 0.34, carbs: 0.04 },
-    oliveOil: { name: "Oliwa", unit: "g", kcal: 8.84, carbs: 0 },
-    egg: { name: "Jajko M", unit: "szt.", kcal: 78, carbs: 0.6 },
-    tuna: { name: "Tuńczyk w zalewie — odsączony", unit: "g", kcal: 1.16, carbs: 0 },
-    cucumber: { name: "Ogórek", unit: "g", kcal: 0.15, carbs: 0.018 },
-    bacon: { name: "Boczek", unit: "g", kcal: 5.41, carbs: 0.014 },
-    porkNeck: { name: "Karkówka wieprzowa (surowa)", unit: "g", kcal: 2.67, carbs: 0 },
-    cottageCheese: { name: "Twaróg półtłusty", unit: "g", kcal: 1.33, carbs: 0.035 },
-    mozzarella: { name: "Mozzarella", unit: "g", kcal: 2.53, carbs: 0.02 },
-    olives: { name: "Oliwki zielone", unit: "g", kcal: 1.45, carbs: 0.008 }
+    chicken: { name: "Pierś z kurczaka (surowa)", category: "meat", unit: "g", kcal: 1.2, carbs: 0 },
+    chickenThigh: { name: "Udko z kurczaka bez skóry (surowe)", category: "meat", unit: "g", kcal: 1.77, carbs: 0 },
+    turkey: { name: "Pierś z indyka (surowa)", category: "meat", unit: "g", kcal: 1.14, carbs: 0 },
+    porkNeck: { name: "Karkówka wieprzowa (surowa)", category: "meat", unit: "g", kcal: 2.67, carbs: 0 },
+    porkLoin: { name: "Schab wieprzowy (surowy)", category: "meat", unit: "g", kcal: 1.43, carbs: 0 },
+    bacon: { name: "Boczek", category: "meat", unit: "g", kcal: 5.41, carbs: 0.014 },
+    groundBeef: { name: "Wołowina mielona 20% tłuszczu", category: "meat", unit: "g", kcal: 2.54, carbs: 0 },
+    beefSteak: { name: "Stek wołowy (surowy)", category: "meat", unit: "g", kcal: 2.01, carbs: 0 },
+    egg: { name: "Jajko M", category: "meat", unit: "szt.", kcal: 78, carbs: 0.6 },
+    tuna: { name: "Tuńczyk w zalewie — odsączony", category: "fish", unit: "g", kcal: 1.16, carbs: 0 },
+    salmon: { name: "Łosoś świeży", category: "fish", unit: "g", kcal: 2.08, carbs: 0 },
+    smokedMackerel: { name: "Makrela wędzona", category: "fish", unit: "g", kcal: 2.21, carbs: 0 },
+    sardines: { name: "Sardynki w oleju — odsączone", category: "fish", unit: "g", kcal: 2.08, carbs: 0 },
+    cod: { name: "Dorsz świeży", category: "fish", unit: "g", kcal: 0.82, carbs: 0 },
+    shrimp: { name: "Krewetki gotowane", category: "fish", unit: "g", kcal: 0.99, carbs: 0.002 },
+    cottageCheese: { name: "Twaróg półtłusty", category: "dairy", unit: "g", kcal: 1.33, carbs: 0.035 },
+    mozzarella: { name: "Mozzarella", category: "dairy", unit: "g", kcal: 2.53, carbs: 0.02 },
+    gouda: { name: "Ser gouda", category: "dairy", unit: "g", kcal: 3.56, carbs: 0.022 },
+    feta: { name: "Ser feta", category: "dairy", unit: "g", kcal: 2.65, carbs: 0.039 },
+    halloumi: { name: "Ser halloumi", category: "dairy", unit: "g", kcal: 3.21, carbs: 0.022 },
+    cream30: { name: "Śmietanka 30%", category: "dairy", unit: "ml", kcal: 2.92, carbs: 0.03 },
+    sourCream18: { name: "Śmietana 18%", category: "dairy", unit: "g", kcal: 1.86, carbs: 0.036 },
+    avocado: { name: "Awokado — miąższ", category: "vegetables", unit: "g", kcal: 1.6, carbs: 0.018 },
+    cauliflower: { name: "Kalafior", category: "vegetables", unit: "g", kcal: 0.25, carbs: 0.03 },
+    broccoli: { name: "Brokuł", category: "vegetables", unit: "g", kcal: 0.34, carbs: 0.04 },
+    cucumber: { name: "Ogórek", category: "vegetables", unit: "g", kcal: 0.15, carbs: 0.018 },
+    zucchini: { name: "Cukinia", category: "vegetables", unit: "g", kcal: 0.17, carbs: 0.021 },
+    mushrooms: { name: "Pieczarki", category: "vegetables", unit: "g", kcal: 0.22, carbs: 0.023 },
+    spinach: { name: "Szpinak", category: "vegetables", unit: "g", kcal: 0.23, carbs: 0.014 },
+    greenBeans: { name: "Fasolka szparagowa", category: "vegetables", unit: "g", kcal: 0.31, carbs: 0.045 },
+    sauerkraut: { name: "Kapusta kiszona", category: "vegetables", unit: "g", kcal: 0.19, carbs: 0.018 },
+    lettuce: { name: "Sałata", category: "vegetables", unit: "g", kcal: 0.15, carbs: 0.012 },
+    tomato: { name: "Pomidor", category: "vegetables", unit: "g", kcal: 0.18, carbs: 0.027 },
+    bellPepper: { name: "Papryka", category: "vegetables", unit: "g", kcal: 0.31, carbs: 0.04 },
+    olives: { name: "Oliwki zielone", category: "vegetables", unit: "g", kcal: 1.45, carbs: 0.008 },
+    butter: { name: "Masło", category: "fats", unit: "g", kcal: 7.35, carbs: 0.006 },
+    mct: { name: "Olej MCT", category: "fats", unit: "ml", kcal: 8.3, carbs: 0 },
+    oliveOil: { name: "Oliwa", category: "fats", unit: "g", kcal: 8.84, carbs: 0 },
+    lard: { name: "Smalec", category: "fats", unit: "g", kcal: 9, carbs: 0 },
+    coconutOil: { name: "Olej kokosowy", category: "fats", unit: "g", kcal: 8.92, carbs: 0 },
+    almonds: { name: "Migdały", category: "nuts", unit: "g", kcal: 5.79, carbs: 0.096 },
+    walnuts: { name: "Orzechy włoskie", category: "nuts", unit: "g", kcal: 6.54, carbs: 0.07 },
+    pumpkinSeeds: { name: "Pestki dyni", category: "nuts", unit: "g", kcal: 5.59, carbs: 0.107 },
+    coffee: { name: "Kawa czarna", category: "drinks", unit: "ml", kcal: 0.008, carbs: 0 }
   };
   const GYM_PLANS = {
     A: [
@@ -68,6 +107,7 @@
     saveTimer: null,
     pendingEntryFile: null,
     pendingIngredients: [],
+    customFoods: {},
     pendingWeightFile: null,
     weeklyLoading: false,
     installPrompt: null
@@ -111,6 +151,9 @@
       "entryType", "entryTime", "entryDescription", "entryGrams", "entryCalories",
       "entryNetCarbs", "entryPhoto", "entryPhotoPreview", "entryValidation",
       "ingredientProduct", "ingredientAmount", "addIngredientButton", "ingredientHint",
+      "deleteCustomProductButton", "customProductName", "customProductUnit",
+      "customProductCaloriesLabel", "customProductCalories", "customProductCarbsLabel",
+      "customProductCarbs", "customProductMessage", "saveCustomProductButton",
       "ingredientsList", "saveEntryButton", "toast"
     ];
     ids.forEach(id => { el[id] = document.getElementById(id); });
@@ -128,6 +171,9 @@
     el.entryPhoto.addEventListener("change", handleEntryPhotoPreview);
     el.ingredientProduct.addEventListener("change", renderIngredientHint);
     el.addIngredientButton.addEventListener("click", addIngredient);
+    el.customProductUnit.addEventListener("change", renderCustomProductLabels);
+    el.saveCustomProductButton.addEventListener("click", saveCustomProduct);
+    el.deleteCustomProductButton.addEventListener("click", deleteSelectedCustomProduct);
     el.weightPhoto.addEventListener("change", handleWeightPhoto);
     el.gymSession.addEventListener("change", () => renderGymExercises(el.gymSession.value));
     el.saveDraftButton.addEventListener("click", () => saveDraft(true));
@@ -163,6 +209,7 @@
 
   async function initializeStorage() {
     state.reports = loadLocalReports();
+    state.customFoods = loadLocalCustomFoods();
     const configured = isCloudConfigured();
     el.setupBanner.hidden = configured;
 
@@ -179,12 +226,14 @@
       const { data } = await state.supabase.auth.getSession();
       state.user = data.session?.user || null;
       state.cloudReady = true;
+      if (state.user) await syncCustomFoodsWithCloud();
 
       state.supabase.auth.onAuthStateChange(async (_event, session) => {
         const previousUser = state.user?.id;
         state.user = session?.user || null;
         if (!state.user) state.weeklySummaries = [];
         if (state.user && state.user.id !== previousUser) {
+          await syncCustomFoodsWithCloud();
           await migrateLocalReportsToCloud();
           await loadCloudReports();
           await loadWeeklySummaries();
@@ -212,6 +261,77 @@
       !CONFIG.supabaseUrl.includes("YOUR_") &&
       !CONFIG.supabaseAnonKey.includes("YOUR_")
     );
+  }
+
+  function normalizeCustomFoods(input) {
+    const normalized = {};
+    if (!input || typeof input !== "object") return normalized;
+    Object.entries(input).forEach(([id, product]) => {
+      if (!id.startsWith("custom_") || !product || typeof product !== "object") return;
+      const unit = ["g", "ml", "szt."].includes(product.unit) ? product.unit : null;
+      const kcal = Number(product.kcal);
+      const carbs = Number(product.carbs);
+      if (!unit || !String(product.name || "").trim() || !Number.isFinite(kcal) || kcal < 0 || !Number.isFinite(carbs) || carbs < 0) return;
+      normalized[id] = {
+        name: String(product.name).trim().slice(0, 80),
+        category: "custom",
+        unit,
+        kcal,
+        carbs,
+        custom: true,
+        deleted: Boolean(product.deleted),
+        updatedAt: product.updatedAt || new Date(0).toISOString()
+      };
+    });
+    return normalized;
+  }
+
+  function loadLocalCustomFoods() {
+    try {
+      return normalizeCustomFoods(JSON.parse(localStorage.getItem(CUSTOM_FOODS_KEY) || "{}"));
+    } catch {
+      return {};
+    }
+  }
+
+  function saveLocalCustomFoods() {
+    localStorage.setItem(CUSTOM_FOODS_KEY, JSON.stringify(state.customFoods));
+  }
+
+  function mergeCustomFoods(localFoods, cloudFoods) {
+    const merged = { ...normalizeCustomFoods(cloudFoods) };
+    Object.entries(normalizeCustomFoods(localFoods)).forEach(([id, localProduct]) => {
+      const cloudProduct = merged[id];
+      if (!cloudProduct || String(localProduct.updatedAt) >= String(cloudProduct.updatedAt)) merged[id] = localProduct;
+    });
+    return merged;
+  }
+
+  async function syncCustomFoodsWithCloud() {
+    if (!state.user || !state.supabase) return;
+    const cloudFoods = normalizeCustomFoods(state.user.user_metadata?.p80_custom_foods || {});
+    state.customFoods = mergeCustomFoods(state.customFoods, cloudFoods);
+    saveLocalCustomFoods();
+    if (JSON.stringify(cloudFoods) !== JSON.stringify(state.customFoods)) {
+      const metadata = { ...(state.user.user_metadata || {}), p80_custom_foods: state.customFoods };
+      const { data, error } = await state.supabase.auth.updateUser({ data: metadata });
+      if (error) throw error;
+      if (data?.user) state.user = data.user;
+    }
+  }
+
+  async function persistCustomFoods() {
+    saveLocalCustomFoods();
+    if (!state.user || !state.supabase) return;
+    const metadata = { ...(state.user.user_metadata || {}), p80_custom_foods: state.customFoods };
+    const { data, error } = await state.supabase.auth.updateUser({ data: metadata });
+    if (error) throw error;
+    if (data?.user) state.user = data.user;
+  }
+
+  function availableFoods() {
+    const custom = Object.fromEntries(Object.entries(state.customFoods).filter(([, product]) => !product.deleted));
+    return { ...FOOD_DATABASE, ...custom };
   }
 
   function loadLocalReports() {
@@ -587,23 +707,103 @@
     el.entryDialog.close();
   }
 
-  function populateFoodDatabase() {
-    if (el.ingredientProduct.options.length) return;
-    el.ingredientProduct.innerHTML = Object.entries(FOOD_DATABASE)
-      .map(([id, product]) => `<option value="${id}">${escapeHtml(product.name)}</option>`)
-      .join("");
+  function populateFoodDatabase(selectedId = el.ingredientProduct.value) {
+    const foods = availableFoods();
+    el.ingredientProduct.innerHTML = Object.entries(FOOD_CATEGORY_LABELS).map(([category, label]) => {
+      const products = Object.entries(foods)
+        .filter(([, product]) => product.category === category)
+        .sort(([, first], [, second]) => first.name.localeCompare(second.name, "pl"));
+      if (!products.length) return "";
+      return `<optgroup label="${escapeAttribute(label)}">${products
+        .map(([id, product]) => `<option value="${escapeAttribute(id)}">${escapeHtml(product.name)}</option>`)
+        .join("")}</optgroup>`;
+    }).join("");
+    if (selectedId && foods[selectedId]) el.ingredientProduct.value = selectedId;
     renderIngredientHint();
   }
 
   function renderIngredientHint() {
-    const product = FOOD_DATABASE[el.ingredientProduct.value] || Object.values(FOOD_DATABASE)[0];
+    const foods = availableFoods();
+    const product = foods[el.ingredientProduct.value] || Object.values(foods)[0];
     if (!product) return;
-    el.ingredientHint.textContent = `Podaj ilość w ${product.unit}.`;
+    el.ingredientHint.textContent = product.custom
+      ? `Podaj ilość w ${product.unit}. Wartości zapisane z etykiety.`
+      : `Podaj ilość w ${product.unit}. Wartości orientacyjne — etykieta ma pierwszeństwo.`;
+    el.deleteCustomProductButton.hidden = !product.custom;
+  }
+
+  function renderCustomProductLabels() {
+    const unit = el.customProductUnit.value;
+    const basis = unit === "szt." ? "1 sztukę" : `100 ${unit}`;
+    el.customProductCaloriesLabel.textContent = `Kalorie na ${basis}`;
+    el.customProductCarbsLabel.textContent = `Węglowodany netto na ${basis}`;
+  }
+
+  async function saveCustomProduct() {
+    const name = el.customProductName.value.trim();
+    const unit = el.customProductUnit.value;
+    const caloriesAtBasis = numberOrNull(el.customProductCalories.value);
+    const carbsAtBasis = numberOrNull(el.customProductCarbs.value);
+    const validUnit = ["g", "ml", "szt."].includes(unit);
+    if (!name || !validUnit || caloriesAtBasis === null || caloriesAtBasis < 0 || carbsAtBasis === null || carbsAtBasis < 0) {
+      el.customProductMessage.textContent = "Podaj nazwę, jednostkę, kalorie i węglowodany netto z etykiety.";
+      return;
+    }
+    if (caloriesAtBasis > 2000 || carbsAtBasis > 100) {
+      el.customProductMessage.textContent = "Sprawdź wartości: maksymalnie 2000 kcal i 100 g węglowodanów dla podanej podstawy.";
+      return;
+    }
+
+    const existing = Object.entries(state.customFoods).find(([, product]) => !product.deleted && product.name.toLocaleLowerCase("pl") === name.toLocaleLowerCase("pl"));
+    const id = existing?.[0] || `custom_${crypto.randomUUID()}`;
+    const divisor = unit === "szt." ? 1 : 100;
+    state.customFoods[id] = {
+      name,
+      category: "custom",
+      unit,
+      kcal: caloriesAtBasis / divisor,
+      carbs: carbsAtBasis / divisor,
+      custom: true,
+      deleted: false,
+      updatedAt: new Date().toISOString()
+    };
+
+    el.saveCustomProductButton.disabled = true;
+    try {
+      await persistCustomFoods();
+      populateFoodDatabase(id);
+      el.customProductName.value = "";
+      el.customProductCalories.value = "";
+      el.customProductCarbs.value = "";
+      el.customProductMessage.textContent = existing ? "Produkt zaktualizowany." : "Produkt zapisany i dodany do listy.";
+      showToast(existing ? "Produkt zaktualizowany." : "Mój produkt zapisany.");
+    } catch (error) {
+      console.error(error);
+      el.customProductMessage.textContent = "Zapis lokalny wykonany, ale synchronizacja z chmurą nie powiodła się.";
+    } finally {
+      el.saveCustomProductButton.disabled = false;
+    }
+  }
+
+  async function deleteSelectedCustomProduct() {
+    const id = el.ingredientProduct.value;
+    const product = state.customFoods[id];
+    if (!product || product.deleted) return;
+    if (!window.confirm(`Usunąć własny produkt „${product.name}”?`)) return;
+    state.customFoods[id] = { ...product, deleted: true, updatedAt: new Date().toISOString() };
+    try {
+      await persistCustomFoods();
+    } catch (error) {
+      console.error(error);
+      showToast("Usunięto lokalnie. Synchronizacja z chmurą nie powiodła się.");
+    }
+    populateFoodDatabase();
+    showToast("Własny produkt usunięty.");
   }
 
   function addIngredient() {
     const productId = el.ingredientProduct.value;
-    const product = FOOD_DATABASE[productId];
+    const product = availableFoods()[productId];
     const amount = numberOrNull(el.ingredientAmount.value);
     if (!product || amount === null || amount <= 0) {
       showEntryError("Wybierz produkt i podaj jego ilość.");
@@ -1406,7 +1606,7 @@
         window.location.reload();
       });
       navigator.serviceWorker
-        .register("./sw.js?v=9", { updateViaCache: "none" })
+        .register("./sw.js?v=10", { updateViaCache: "none" })
         .then(registration => registration.update())
         .catch(error => console.warn("Service worker:", error));
     }
@@ -1520,6 +1720,7 @@
       defaultReport,
       deterministicEvaluation,
       expectedGymSession,
+      foodDatabase: availableFoods,
       totalCalories,
       validateReport
     };

@@ -8,11 +8,11 @@
   <title>P80 — Projekt 80 kg</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=9">
+  <link rel="stylesheet" href="./styles.css?v=10">
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="./config.js?v=9"></script>
-  <script defer src="./app.js?v=9"></script>
+  <script defer src="./config.js?v=10"></script>
+  <script defer src="./app.js?v=10"></script>
 </head>
 <body>
   <header class="topbar">
@@ -448,6 +448,30 @@
           <button id="addIngredientButton" class="secondary-button compact" type="button">Dodaj składnik</button>
         </div>
         <div id="ingredientHint" class="ingredient-hint"></div>
+        <button id="deleteCustomProductButton" class="link-button delete-custom-product" type="button" hidden>Usuń wybrany własny produkt</button>
+        <details class="custom-product-card">
+          <summary>+ Dodaj mój produkt z etykiety</summary>
+          <div class="custom-product-grid">
+            <label>Nazwa produktu
+              <input id="customProductName" type="text" maxlength="80" placeholder="np. Kiełbasa z etykiety">
+            </label>
+            <label>Jednostka
+              <select id="customProductUnit">
+                <option value="g">gramy</option>
+                <option value="ml">mililitry</option>
+                <option value="szt.">sztuki</option>
+              </select>
+            </label>
+            <label><span id="customProductCaloriesLabel">Kalorie na 100 g</span>
+              <input id="customProductCalories" type="text" inputmode="decimal" autocomplete="off" placeholder="np. 320">
+            </label>
+            <label><span id="customProductCarbsLabel">Węglowodany netto na 100 g</span>
+              <input id="customProductCarbs" type="text" inputmode="decimal" autocomplete="off" placeholder="np. 2,5">
+            </label>
+          </div>
+          <div id="customProductMessage" class="inline-message" aria-live="polite"></div>
+          <button id="saveCustomProductButton" class="secondary-button compact" type="button">Zapisz mój produkt</button>
+        </details>
         <div id="ingredientsList" class="ingredients-list"></div>
       </section>
       <div class="form-grid">
