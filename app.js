@@ -107,6 +107,7 @@
     weeklySummaries: [],
     currentReport: null,
     currentDate: localDateKey(new Date()),
+    todayDate: localDateKey(new Date()),
     supabase: null,
     user: null,
     cloudReady: false,
@@ -178,7 +179,7 @@
       button.addEventListener("click", () => navigate(button.dataset.nav));
     });
 
-    el.reportDate.addEventListener("change", () => openReport(el.reportDate.value));
+    el.reportDate.addEventListener("change", () => switchReportDate(el.reportDate.value));
     el.addEntryButton.addEventListener("click", () => openEntryDialog());
     el.closeEntryDialog.addEventListener("click", closeEntryDialog);
     el.saveEntryButton.addEventListener("click", saveEntryFromDialog);
@@ -220,9 +221,9 @@
   }
 
   function configureDates() {
-    el.reportDate.max = localDateKey(new Date());
+    el.reportDate.max = state.todayDate;
     el.reportDate.value = state.currentDate;
-    el.todayLabel.textContent = formatLongDate(state.currentDate).toUpperCase();
+    el.todayLabel.textContent = formatLongDate(state.todayDate).toUpperCase();
   }
 
   async function initializeStorage() {
@@ -525,19 +526,29 @@
   async function checkDayRollover() {
     if (state.rolloverRunning) return;
     const newDate = localDateKey(new Date());
-    if (newDate === state.currentDate) {
+    if (newDate === state.todayDate) {
       scheduleMidnightRollover();
       return;
     }
 
     state.rolloverRunning = true;
     try {
+      const previousToday = state.todayDate;
+      const wasViewingPreviousToday = state.currentReport?.date === previousToday;
       clearTimeout(state.saveTimer);
       if (state.currentReport && !state.currentReport.closed) await saveDraft(false);
       await materializeMissedReports();
-      state.currentDate = newDate;
+      state.todayDate = newDate;
+      if (wasViewingPreviousToday) state.currentDate = newDate;
       configureDates();
-      openReport(state.currentDate, false);
+      if (wasViewingPreviousToday) openReport(newDate, false);
+      else if (state.currentReport) {
+        state.currentReport = state.reports.find(report => report.date === state.currentReport.date) || state.currentReport;
+        populateReportForm();
+        renderEntries();
+        renderEvaluation(state.currentReport);
+        setReportLocked(state.currentReport.closed);
+      }
       renderAll();
       showToast("Rozpoczął się nowy dzień. Poprzedni raport został automatycznie rozliczony.");
     } finally {
@@ -639,6 +650,16 @@
     setReportLocked(state.currentReport.closed);
     resolveStoredPreviews(state.currentReport);
     if (shouldNavigate) navigate("report");
+  }
+
+  async function switchReportDate(date, shouldNavigate = true) {
+    if (!date || date === state.currentReport?.date) {
+      if (shouldNavigate) navigate("report");
+      return;
+    }
+    clearTimeout(state.saveTimer);
+    if (state.currentReport && !state.currentReport.closed) await saveDraft(false);
+    openReport(date, shouldNavigate);
   }
 
   function populateReportForm() {
@@ -1261,9 +1282,9 @@
       ${(evaluation.warnings || []).length ? `<div class="evaluation-warning"><strong>Ostrzeżenia:</strong><ul>${evaluation.warnings.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>` : ""}
       <div class="evaluation-line"><strong>Moment:</strong><br>${escapeHtml(evaluation.turning_point || "—")}</div>
     `;
-    const isToday = report.date === localDateKey(new Date());
-    const canRepair = report.date === PROJECT.startDate || isAutomaticMidnightClosure(report);
-    el.reopenReportButton.hidden = !report.closed || (!isToday && !canRepair);
+    const isToday = report.date === state.todayDate;
+    const canEdit = canEditClosedReport(report);
+    el.reopenReportButton.hidden = !report.closed || !canEdit;
     el.reopenReportButton.textContent = isToday
       ? "Popraw i przelicz dzisiejszy raport"
       : "Uzupełnij i przelicz ten raport";
@@ -1271,9 +1292,8 @@
 
   async function reopenCurrentReport() {
     const report = state.currentReport;
-    const isToday = report?.date === localDateKey(new Date());
-    const canRepair = report?.date === PROJECT.startDate || isAutomaticMidnightClosure(report);
-    if (!report?.closed || (!isToday && !canRepair)) return;
+    const isToday = report?.date === state.todayDate;
+    if (!report?.closed || !canEditClosedReport(report)) return;
     const question = isToday
       ? "Otworzyć dzisiejszy raport do poprawy i ponownego przeliczenia? Wszystkie wpisane dane zostaną zachowane."
       : `Otworzyć raport ${formatShortDate(report.date)} do uzupełnienia i ponownego przeliczenia? Wszystkie odzyskane dane zostaną zachowane.`;
@@ -1287,6 +1307,14 @@
     renderEvaluation(report);
     renderAll();
     showToast("Raport otwarty. Dane zostały zachowane.");
+  }
+
+  function canEditClosedReport(report) {
+    if (!report) return false;
+    const editableDates = Array.isArray(PROJECT.editableReportDates) ? PROJECT.editableReportDates : [];
+    return report.date === state.todayDate
+      || editableDates.includes(report.date)
+      || isAutomaticMidnightClosure(report);
   }
 
   function setReportLocked(locked) {
@@ -1513,7 +1541,7 @@
       </button>
     `).join("");
     el.historyList.querySelectorAll("[data-open-date]").forEach(button => {
-      button.addEventListener("click", () => openReport(button.dataset.openDate));
+      button.addEventListener("click", () => switchReportDate(button.dataset.openDate));
     });
   }
 
@@ -1646,7 +1674,7 @@
   function updateGymPlanBadge() {
     const session = expectedGymSession(state.currentDate);
     const gym = Boolean(session);
-    el.gymPlanBadge.textContent = gym ? `Dziś siłownia ${session}` : "Dziś bez siłowni";
+    el.gymPlanBadge.textContent = gym ? `Plan dnia: siłownia ${session}` : "Plan dnia: bez siłowni";
     el.gymPlanBadge.className = gym ? "badge badge-accent" : "badge badge-muted";
   }
 
@@ -1785,7 +1813,7 @@
         window.location.reload();
       });
       navigator.serviceWorker
-        .register("./sw.js?v=17", { updateViaCache: "none" })
+        .register("./sw.js?v=18", { updateViaCache: "none" })
         .then(registration => registration.update())
         .catch(error => console.warn("Service worker:", error));
     }

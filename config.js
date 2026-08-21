@@ -10,6 +10,7 @@ window.P80_CONFIG = {
     calorieTarget: 1900,
     calorieFloor: 1700,
     reportDeadlineHour: 24,
+    editableReportDates: ["2026-08-20", "2026-08-21"],
     gymDays: [1, 3, 5],
     homeMinutesMin: 20,
     bikeKmMin: 20

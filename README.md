@@ -16,6 +16,7 @@ Mobilna aplikacja do pełnego raportowania Projektu 80 kg.
 - raport pozostaje otwarty do 23:59, a o północy niezakończony dzień jest automatycznie oznaczany jako `NIEDOWIEZIONE`;
 - historia uwzględnia pierwszy dzień projektu — 20.08.2026 — również przy uruchomieniu aplikacji następnego dnia;
 - kompletny szkic jest automatycznie rozliczany o północy; niekompletny raport można otworzyć z historii, uzupełnić i ponownie przeliczyć;
+- daty systemowe i data edytowanego raportu są rozdzielone, a raporty 20.08 i 21.08 pozostają odblokowane do ręcznej korekty;
 - historia, wykres masy, seria dowiezionych dni i eksport JSON;
 - ekran startowy z symetrycznym trendem zmiany masy względem zera oraz wykresami glukozy i ketonów;
 - mobilny układ i instalacja jako PWA;
