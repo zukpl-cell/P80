@@ -5,6 +5,7 @@ Mobilna aplikacja do pełnego raportowania Projektu 80 kg.
 ## Co działa
 
 - codzienny raport: masa z dokładnością po przecinku, glukoza, ketony, jedzenie, napoje, ruch, sen i keto;
+- pola masy i ketonów obsługują polski przecinek dziesiętny;
 - szkic dnia zachowujący poranne pomiary i późniejsze uzupełnienia;
 - wiele pozycji jedzenia i napojów z gramaturą, kaloriami i zdjęciem;
 - kalkulator z 51 produktami keto podzielonymi na kategorie;

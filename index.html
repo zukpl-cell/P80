@@ -6,14 +6,14 @@
   <meta name="theme-color" content="#0b0d10">
   <meta name="description" content="P80 — codzienny raport projektu 80 kg">
   <title>P80 — Projekt 80 kg</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=18">
-  <link rel="icon" href="./icons/favicon-32.png?v=18" type="image/png" sizes="32x32">
-  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=18" sizes="180x180">
-  <link rel="stylesheet" href="./styles.css?v=18">
+  <link rel="manifest" href="./manifest.webmanifest?v=19">
+  <link rel="icon" href="./icons/favicon-32.png?v=19" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=19" sizes="180x180">
+  <link rel="stylesheet" href="./styles.css?v=19">
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="./config.js?v=18"></script>
-  <script defer src="./app.js?v=18"></script>
+  <script defer src="./config.js?v=19"></script>
+  <script defer src="./app.js?v=19"></script>
 </head>
 <body>
   <header class="topbar">
@@ -165,7 +165,7 @@
               <input id="glucose" name="glucose" type="number" min="20" max="500" step="1" inputmode="numeric" placeholder="opcjonalnie">
             </label>
             <label>Ketony (mmol/l)
-              <input id="ketones" name="ketones" type="number" min="0" max="10" step="0.1" inputmode="decimal" placeholder="opcjonalnie">
+              <input id="ketones" name="ketones" type="text" inputmode="decimal" autocomplete="off" placeholder="np. 0,4">
             </label>
             <label>Zdjęcie wagi
               <input id="weightPhoto" name="weightPhoto" type="file" accept="image/*">

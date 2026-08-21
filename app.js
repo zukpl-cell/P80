@@ -666,7 +666,7 @@
     const report = state.currentReport;
     el.weight.value = decimalInputValue(report.weight);
     el.glucose.value = valueOrBlank(report.glucose);
-    el.ketones.value = valueOrBlank(report.ketones);
+    el.ketones.value = decimalInputValue(report.ketones);
     el.homeMinutes.value = numberOrZero(report.homeMinutes);
     el.gymMinutes.value = numberOrZero(report.gymMinutes);
     el.gymSession.value = report.gymSession || "";
@@ -1813,7 +1813,7 @@
         window.location.reload();
       });
       navigator.serviceWorker
-        .register("./sw.js?v=18", { updateViaCache: "none" })
+        .register("./sw.js?v=19", { updateViaCache: "none" })
         .then(registration => registration.update())
         .catch(error => console.warn("Service worker:", error));
     }
