@@ -20,19 +20,24 @@
     vegetables: "Warzywa",
     fats: "Tłuszcze",
     nuts: "Orzechy i pestki",
+    supplements: "Odżywki i suplementy",
     drinks: "Napoje"
   };
   const FOOD_DATABASE = {
     chicken: { name: "Pierś z kurczaka (surowa)", category: "meat", unit: "g", kcal: 1.2, carbs: 0 },
+    chickenCooked: { name: "Pierś z kurczaka (po obróbce)", category: "meat", unit: "g", kcal: 1.6, carbs: 0 },
     chickenThigh: { name: "Udko z kurczaka bez skóry (surowe)", category: "meat", unit: "g", kcal: 1.77, carbs: 0 },
     turkey: { name: "Pierś z indyka (surowa)", category: "meat", unit: "g", kcal: 1.14, carbs: 0 },
     porkNeck: { name: "Karkówka wieprzowa (surowa)", category: "meat", unit: "g", kcal: 2.67, carbs: 0 },
+    porkNeckCooked: { name: "Karkówka wieprzowa (po obróbce)", category: "meat", unit: "g", kcal: 3.514, carbs: 0 },
     porkLoin: { name: "Schab wieprzowy (surowy)", category: "meat", unit: "g", kcal: 1.43, carbs: 0 },
     bacon: { name: "Boczek", category: "meat", unit: "g", kcal: 5.41, carbs: 0.014 },
     groundBeef: { name: "Wołowina mielona 20% tłuszczu", category: "meat", unit: "g", kcal: 2.54, carbs: 0 },
     beefSteak: { name: "Stek wołowy (surowy)", category: "meat", unit: "g", kcal: 2.01, carbs: 0 },
     egg: { name: "Jajko M", category: "meat", unit: "szt.", kcal: 78, carbs: 0.6 },
-    tuna: { name: "Tuńczyk w zalewie — odsączony", category: "fish", unit: "g", kcal: 1.16, carbs: 0 },
+    eggL: { name: "Jajko L", category: "meat", unit: "szt.", kcal: 90, carbs: 0.6 },
+    tuna: { name: "Tuńczyk w sosie własnym — odsączony", category: "fish", unit: "g", kcal: 1.16, carbs: 0 },
+    tunaOil: { name: "Tuńczyk w oliwie — odsączony", category: "fish", unit: "g", kcal: 1.9, carbs: 0 },
     salmon: { name: "Łosoś świeży", category: "fish", unit: "g", kcal: 2.08, carbs: 0 },
     smokedMackerel: { name: "Makrela wędzona", category: "fish", unit: "g", kcal: 2.21, carbs: 0 },
     sardines: { name: "Sardynki w oleju — odsączone", category: "fish", unit: "g", kcal: 2.08, carbs: 0 },
@@ -48,6 +53,7 @@
     avocado: { name: "Awokado — miąższ", category: "vegetables", unit: "g", kcal: 1.6, carbs: 0.018 },
     cauliflower: { name: "Kalafior", category: "vegetables", unit: "g", kcal: 0.25, carbs: 0.03 },
     broccoli: { name: "Brokuł", category: "vegetables", unit: "g", kcal: 0.34, carbs: 0.04 },
+    babyBroccoli: { name: "Baby brokuł", category: "vegetables", unit: "g", kcal: 0.35, carbs: 0.031 },
     cucumber: { name: "Ogórek", category: "vegetables", unit: "g", kcal: 0.15, carbs: 0.018 },
     zucchini: { name: "Cukinia", category: "vegetables", unit: "g", kcal: 0.17, carbs: 0.021 },
     mushrooms: { name: "Pieczarki", category: "vegetables", unit: "g", kcal: 0.22, carbs: 0.023 },
@@ -59,6 +65,7 @@
     greenBeans: { name: "Fasolka szparagowa", category: "vegetables", unit: "g", kcal: 0.31, carbs: 0.045 },
     sauerkraut: { name: "Kapusta kiszona", category: "vegetables", unit: "g", kcal: 0.19, carbs: 0.018 },
     lettuce: { name: "Sałata", category: "vegetables", unit: "g", kcal: 0.15, carbs: 0.012 },
+    saladMix: { name: "Mix sałat", category: "vegetables", unit: "g", kcal: 0.18, carbs: 0.02 },
     tomato: { name: "Pomidor", category: "vegetables", unit: "g", kcal: 0.18, carbs: 0.027 },
     bellPepper: { name: "Papryka", category: "vegetables", unit: "g", kcal: 0.31, carbs: 0.04 },
     olives: { name: "Oliwki zielone", category: "vegetables", unit: "g", kcal: 1.45, carbs: 0.008 },
@@ -73,7 +80,110 @@
     macadamia: { name: "Orzechy makadamia", category: "nuts", unit: "g", kcal: 7.18, carbs: 0.054 },
     hazelnuts: { name: "Orzechy laskowe", category: "nuts", unit: "g", kcal: 6.28, carbs: 0.07 },
     pumpkinSeeds: { name: "Pestki dyni", category: "nuts", unit: "g", kcal: 5.59, carbs: 0.107 },
+    wheyAllnutrition: { name: "ALLNUTRITION Whey Protein", category: "supplements", unit: "g", kcal: 4.1, carbs: 0.16 },
     coffee: { name: "Kawa czarna", category: "drinks", unit: "ml", kcal: 0.008, carbs: 0 }
+  };
+  const MEAL_PRESET_GROUPS = {
+    breakfast: "Śniadania",
+    lunch: "Obiady",
+    dinner: "Kolacje",
+    extras: "Shake białkowy"
+  };
+  const MEAL_PRESETS = {
+    breakfastBulletCoffee: {
+      group: "breakfast",
+      entryType: "drink",
+      name: "Bullet Coffee",
+      ingredients: [
+        { productId: "coffee", amount: 240 },
+        { productId: "butter", amount: 10 },
+        { productId: "mct", amount: 10 }
+      ]
+    },
+    breakfastEggs: {
+      group: "breakfast",
+      name: "Jajka, sałata i oliwki",
+      ingredients: [
+        { productId: "eggL", amount: 4 },
+        { productId: "saladMix", amount: 100 },
+        { productId: "olives", amount: 50 },
+        { productId: "oliveOil", amount: 10 }
+      ]
+    },
+    breakfastTuna: {
+      group: "breakfast",
+      name: "Jajka z tuńczykiem",
+      ingredients: [
+        { productId: "eggL", amount: 4 },
+        { productId: "tuna", amount: 110 },
+        { productId: "saladMix", amount: 100 }
+      ]
+    },
+    lunchChickenBroccoli: {
+      group: "lunch",
+      name: "Kurczak z brokułem",
+      ingredients: [
+        { productId: "chickenCooked", amount: 240 },
+        { productId: "broccoli", amount: 250 },
+        { productId: "oliveOil", amount: 25 }
+      ]
+    },
+    lunchChickenBabyBroccoli: {
+      group: "lunch",
+      name: "Kurczak z baby brokułem",
+      ingredients: [
+        { productId: "chickenCooked", amount: 240 },
+        { productId: "babyBroccoli", amount: 250 },
+        { productId: "oliveOil", amount: 25 }
+      ]
+    },
+    lunchPorkBroccoli: {
+      group: "lunch",
+      name: "Karkówka z brokułem",
+      ingredients: [
+        { productId: "porkNeckCooked", amount: 190 },
+        { productId: "broccoli", amount: 250 },
+        { productId: "saladMix", amount: 100 }
+      ]
+    },
+    lunchPorkBabyBroccoli: {
+      group: "lunch",
+      name: "Karkówka z baby brokułem",
+      ingredients: [
+        { productId: "porkNeckCooked", amount: 190 },
+        { productId: "babyBroccoli", amount: 250 },
+        { productId: "saladMix", amount: 100 }
+      ]
+    },
+    dinnerTunaOwnSauce: {
+      group: "dinner",
+      name: "Tuńczyk w sosie własnym — duża sałatka",
+      ingredients: [
+        { productId: "tuna", amount: 220 },
+        { productId: "saladMix", amount: 150 },
+        { productId: "eggL", amount: 1 },
+        { productId: "olives", amount: 50 },
+        { productId: "oliveOil", amount: 10 }
+      ]
+    },
+    dinnerTunaOil: {
+      group: "dinner",
+      name: "Tuńczyk w oliwie — duża sałatka",
+      ingredients: [
+        { productId: "tunaOil", amount: 220 },
+        { productId: "saladMix", amount: 150 },
+        { productId: "eggL", amount: 1 },
+        { productId: "olives", amount: 50 }
+      ]
+    },
+    proteinShakeAllnutrition: {
+      group: "extras",
+      entryType: "supplement",
+      name: "Shake ALLNUTRITION Whey Protein",
+      ingredients: [
+        { productId: "wheyAllnutrition", amount: 30 }
+      ]
+    }
   };
   const GYM_PLANS = {
     A: [
@@ -131,6 +241,7 @@
 
   async function init() {
     cacheElements();
+    populateMealPresets();
     bindEvents();
     renderStaticPlan();
     configureDates();
@@ -165,6 +276,7 @@
       "entryDialog", "entryForm", "entryDialogTitle", "closeEntryDialog", "entryId",
       "entryType", "entryTime", "entryDescription", "entryGrams", "entryCalories",
       "entryNetCarbs", "entryPhoto", "entryPhotoPreview", "entryValidation",
+      "mealPresetSelect", "mealPresetPreview", "loadMealPresetButton",
       "ingredientProduct", "ingredientAmount", "addIngredientButton", "ingredientHint",
       "deleteCustomProductButton", "customProductName", "customProductUnit",
       "customProductCaloriesLabel", "customProductCalories", "customProductCarbsLabel",
@@ -186,6 +298,8 @@
     el.entryPhoto.addEventListener("change", handleEntryPhotoPreview);
     el.ingredientProduct.addEventListener("change", renderIngredientHint);
     el.addIngredientButton.addEventListener("click", addIngredient);
+    el.mealPresetSelect.addEventListener("change", renderMealPresetPreview);
+    el.loadMealPresetButton.addEventListener("click", () => applyMealPreset(el.mealPresetSelect.value));
     el.customProductUnit.addEventListener("change", renderCustomProductLabels);
     el.saveCustomProductButton.addEventListener("click", saveCustomProduct);
     el.deleteCustomProductButton.addEventListener("click", deleteSelectedCustomProduct);
@@ -782,6 +896,8 @@
     el.entryNetCarbs.value = valueOrBlank(entry?.netCarbs);
     el.entryPhoto.value = "";
     populateFoodDatabase();
+    el.mealPresetSelect.value = "";
+    renderMealPresetPreview();
     el.ingredientAmount.value = "";
     renderIngredientsCalculator();
     renderEntryPhotoPreview(entry?.photoPreview);
@@ -808,6 +924,37 @@
     }).join("");
     if (selectedId && foods[selectedId]) el.ingredientProduct.value = selectedId;
     renderIngredientHint();
+  }
+
+  function populateMealPresets() {
+    el.mealPresetSelect.innerHTML = '<option value="">Wybierz gotowy zestaw</option>' + Object.entries(MEAL_PRESET_GROUPS)
+      .map(([group, label]) => {
+        const options = Object.entries(MEAL_PRESETS)
+          .filter(([, preset]) => preset.group === group)
+          .map(([id, preset]) => `<option value="${escapeAttribute(id)}">${escapeHtml(preset.name)}</option>`)
+          .join("");
+        return `<optgroup label="${escapeAttribute(label)}">${options}</optgroup>`;
+      })
+      .join("");
+    renderMealPresetPreview();
+  }
+
+  function renderMealPresetPreview() {
+    const preset = MEAL_PRESETS[el.mealPresetSelect.value];
+    el.loadMealPresetButton.disabled = !preset;
+    if (!preset) {
+      el.mealPresetPreview.innerHTML = "Wybierz zestaw, aby zobaczyć gramatury i wartości.";
+      return;
+    }
+    const foods = availableFoods();
+    const ingredients = preset.ingredients.map(item => ({ ...item, product: foods[item.productId] })).filter(item => item.product);
+    const calories = ingredients.reduce((sum, item) => sum + Math.round(item.amount * item.product.kcal), 0);
+    const carbs = ingredients.reduce((sum, item) => sum + Math.round(item.amount * item.product.carbs * 10) / 10, 0);
+    el.mealPresetPreview.innerHTML = `
+      <strong>${escapeHtml(preset.name)}</strong>
+      <span>${ingredients.map(item => `${escapeHtml(item.product.name)} ${numberFormat(item.amount, item.amount % 1 ? 1 : 0)} ${escapeHtml(item.product.unit)}`).join(" · ")}</span>
+      <small>${numberFormat(calories, 0)} kcal · ${numberFormat(carbs, 1)} g węglowodanów netto</small>
+    `;
   }
 
   function renderIngredientHint() {
@@ -897,7 +1044,17 @@
       showEntryError("Wybierz produkt i podaj jego ilość.");
       return;
     }
-    state.pendingIngredients.push({
+    state.pendingIngredients.push(createIngredient(productId, amount));
+    el.ingredientAmount.value = "";
+    el.entryValidation.hidden = true;
+    applyIngredientTotals();
+    renderIngredientsCalculator();
+  }
+
+  function createIngredient(productId, amount) {
+    const product = availableFoods()[productId];
+    if (!product) return null;
+    return {
       id: crypto.randomUUID(),
       productId,
       name: product.name,
@@ -905,15 +1062,50 @@
       unit: product.unit,
       calories: Math.round(amount * product.kcal),
       netCarbs: Math.round(amount * product.carbs * 10) / 10
-    });
-    el.ingredientAmount.value = "";
+    };
+  }
+
+  function applyMealPreset(presetId) {
+    const preset = MEAL_PRESETS[presetId];
+    if (!preset) return;
+    if (state.pendingIngredients.length && !window.confirm("Zastąpić obecne składniki wybranym zestawem?")) return;
+    const ingredients = preset.ingredients
+      .map(item => createIngredient(item.productId, item.amount))
+      .filter(Boolean);
+    if (ingredients.length !== preset.ingredients.length) {
+      showEntryError("Nie udało się wczytać wszystkich składników zestawu.");
+      return;
+    }
+    state.pendingIngredients = ingredients;
+    el.entryType.value = preset.entryType || "meal";
+    el.entryDescription.value = preset.name;
     el.entryValidation.hidden = true;
     applyIngredientTotals();
     renderIngredientsCalculator();
+    showToast(`${preset.name} — zestaw wczytany.`);
   }
 
   function removeIngredient(id) {
     state.pendingIngredients = state.pendingIngredients.filter(item => item.id !== id);
+    applyIngredientTotals();
+    renderIngredientsCalculator();
+  }
+
+  function updateIngredientAmount(id, rawAmount) {
+    const item = state.pendingIngredients.find(ingredient => ingredient.id === id);
+    const amount = numberOrNull(rawAmount);
+    if (!item || amount === null || amount <= 0) {
+      showEntryError("Ilość składnika musi być większa od zera.");
+      renderIngredientsCalculator();
+      return;
+    }
+    const product = availableFoods()[item.productId];
+    const caloriesPerUnit = product?.kcal ?? (item.amount ? numberOrZero(item.calories) / item.amount : 0);
+    const carbsPerUnit = product?.carbs ?? (item.amount ? numberOrZero(item.netCarbs) / item.amount : 0);
+    item.amount = amount;
+    item.calories = Math.round(amount * caloriesPerUnit);
+    item.netCarbs = Math.round(amount * carbsPerUnit * 10) / 10;
+    el.entryValidation.hidden = true;
     applyIngredientTotals();
     renderIngredientsCalculator();
   }
@@ -940,13 +1132,22 @@
     }
     el.ingredientsList.innerHTML = state.pendingIngredients.map(item => `
       <div class="ingredient-row">
-        <span>${escapeHtml(item.name)} · ${numberFormat(item.amount, item.amount % 1 ? 1 : 0)} ${escapeHtml(item.unit)}</span>
+        <div class="ingredient-details">
+          <span>${escapeHtml(item.name)}</span>
+          <label class="ingredient-amount-editor">
+            <input type="text" inputmode="decimal" autocomplete="off" value="${escapeAttribute(decimalInputValue(item.amount))}" data-ingredient-amount="${escapeAttribute(item.id)}" aria-label="Ilość: ${escapeAttribute(item.name)}">
+            <small>${escapeHtml(item.unit)}</small>
+          </label>
+        </div>
         <strong>${numberFormat(item.calories, 0)} kcal</strong>
         <button class="icon-button" type="button" data-remove-ingredient="${item.id}" aria-label="Usuń składnik">×</button>
       </div>
     `).join("");
     el.ingredientsList.querySelectorAll("[data-remove-ingredient]").forEach(button => {
       button.addEventListener("click", () => removeIngredient(button.dataset.removeIngredient));
+    });
+    el.ingredientsList.querySelectorAll("[data-ingredient-amount]").forEach(input => {
+      input.addEventListener("change", () => updateIngredientAmount(input.dataset.ingredientAmount, input.value));
     });
   }
 
@@ -1813,7 +2014,7 @@
         window.location.reload();
       });
       navigator.serviceWorker
-        .register("./sw.js?v=19", { updateViaCache: "none" })
+        .register("./sw.js?v=23", { updateViaCache: "none" })
         .then(registration => registration.update())
         .catch(error => console.warn("Service worker:", error));
     }

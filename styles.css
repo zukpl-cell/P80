@@ -283,6 +283,15 @@ textarea { resize: vertical; min-height: 82px; }
 .calculator-heading { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 11px; }
 .calculator-heading strong { display: block; font-size: .9rem; }
 .calculator-heading span, .ingredient-hint { display: block; margin-top: 3px; color: var(--muted); font-size: .69rem; line-height: 1.4; }
+.meal-presets { margin-bottom: 12px; padding: 11px; border: 1px solid rgba(255, 122, 61, .25); border-radius: 12px; background: rgba(255, 90, 31, .06); }
+.meal-presets > strong { display: block; font-size: .78rem; }
+.meal-presets > span { display: block; margin-top: 3px; color: var(--muted); font-size: .66rem; line-height: 1.4; }
+.meal-preset-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px; margin-top: 9px; }
+.meal-preset-controls select, .meal-preset-controls button { margin: 0; }
+.meal-preset-preview { display: grid; gap: 3px; min-height: 44px; margin-top: 8px; padding: 9px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font-size: .65rem; line-height: 1.4; }
+.meal-preset-preview strong { color: var(--text); font-size: .72rem; }
+.meal-preset-preview span { overflow-wrap: anywhere; }
+.meal-preset-preview small { color: var(--accent-2); font-weight: 800; }
 .ingredient-controls { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(90px, .7fr); gap: 9px; align-items: end; }
 .ingredient-controls button { grid-column: 1 / -1; }
 .delete-custom-product { margin-top: 7px; padding: 0; color: var(--red); }
@@ -292,6 +301,11 @@ textarea { resize: vertical; min-height: 82px; }
 .custom-product-card .secondary-button { margin-top: 8px; }
 .ingredients-list { display: grid; gap: 7px; margin-top: 10px; }
 .ingredient-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 8px 9px; border-radius: 10px; background: var(--surface); font-size: .73rem; }
+.ingredient-details { display: grid; gap: 5px; min-width: 0; }
+.ingredient-details > span { overflow: hidden; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+.ingredient-amount-editor { display: flex; align-items: center; gap: 5px; margin: 0; }
+.ingredient-amount-editor input { width: 72px; margin: 0; padding: 6px 7px; font-size: .7rem; }
+.ingredient-amount-editor small { color: var(--muted); font-size: .65rem; }
 .ingredient-row strong { color: var(--accent-2); white-space: nowrap; }
 .ingredient-row button { width: 30px; min-height: 30px; padding: 0; }
 .icon-button { width: 31px; height: 31px; padding: 0; color: var(--muted); background: var(--surface-3); border: 1px solid var(--border); border-radius: 9px; }
@@ -386,6 +400,7 @@ dialog::backdrop { background: rgba(0, 0, 0, .75); backdrop-filter: blur(5px); }
 @media (max-width: 440px) {
   .app-shell { padding-left: 12px; padding-right: 12px; }
   .form-grid { grid-template-columns: 1fr; }
+  .meal-preset-controls { grid-template-columns: 1fr; }
   .custom-product-grid { grid-template-columns: 1fr; }
   .choice-grid { grid-template-columns: 1fr; }
   .metric-card { min-height: 108px; }

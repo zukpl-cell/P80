@@ -15,7 +15,7 @@
    - `sw.js`,
    - katalog `icons`,
    - katalog `supabase`.
-6. Commit message: `P80 V19 - przecinek w wartości ketonów`.
+6. Commit message: `P80 V23 - uporządkowane zestawy i shake białkowy`.
 7. Wybierz `Commit changes`.
 
 GitHub Pages powinien wdrożyć zmianę automatycznie. Status sprawdzisz w `Actions` albo `Deployments → github-pages`.

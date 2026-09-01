@@ -1,13 +1,13 @@
-const CACHE = "p80-v2-19";
+const CACHE = "p80-v2-23";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=19",
-  "./config.js?v=19",
-  "./app.js?v=19",
-  "./manifest.webmanifest?v=19",
-  "./icons/favicon-32.png?v=19",
-  "./icons/apple-touch-icon.png?v=19",
+  "./styles.css?v=23",
+  "./config.js?v=23",
+  "./app.js?v=23",
+  "./manifest.webmanifest?v=23",
+  "./icons/favicon-32.png?v=23",
+  "./icons/apple-touch-icon.png?v=23",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png"

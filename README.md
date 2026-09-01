@@ -8,7 +8,12 @@ Mobilna aplikacja do pełnego raportowania Projektu 80 kg.
 - pola masy i ketonów obsługują polski przecinek dziesiętny;
 - szkic dnia zachowujący poranne pomiary i późniejsze uzupełnienia;
 - wiele pozycji jedzenia i napojów z gramaturą, kaloriami i zdjęciem;
-- kalkulator z 51 produktami keto podzielonymi na kategorie;
+- kalkulator z 58 produktami keto podzielonymi na kategorie;
+- gotowe zestawy znajdują się na górze kalkulatora w kolejności: 3 śniadania (Bullet Coffee jako pierwsza), 4 obiady, 2 kolacje i shake białkowy;
+- shake ALLNUTRITION Whey Protein liczy porcję 30 g jako 123 kcal i 4,8 g węglowodanów;
+- osobne pozycje dla tuńczyka w sosie własnym i w oliwie oraz jajek M i L;
+- zestawy obiadowe liczą mięso po obróbce: kurczak 240 g i karkówka 190 g, przy zachowaniu wartości odpowiadających wcześniejszym porcjom surowym;
+- ilość każdego składnika można poprawić bez usuwania go z posiłku;
 - własne produkty z etykiety zapisywane lokalnie i synchronizowane z kontem;
 - twardy werdykt `DOWIEZIONE` / `NIEDOWIEZIONE`;
 - kalorie poniżej dolnego zakresu są ostrzeżeniem, a nie automatycznym niedowiezieniem;
