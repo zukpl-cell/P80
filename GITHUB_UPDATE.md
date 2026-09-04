@@ -15,7 +15,7 @@
    - `sw.js`,
    - katalog `icons`,
    - katalog `supabase`.
-6. Commit message: `P80 V23 - uporządkowane zestawy i shake białkowy`.
+6. Commit message: `P80 V24 - zakładka Trening z filmami`.
 7. Wybierz `Commit changes`.
 
 GitHub Pages powinien wdrożyć zmianę automatycznie. Status sprawdzisz w `Actions` albo `Deployments → github-pages`.

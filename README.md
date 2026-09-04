@@ -25,6 +25,8 @@ Mobilna aplikacja do pełnego raportowania Projektu 80 kg.
 - daty systemowe i data edytowanego raportu są rozdzielone, a raporty 20.08 i 21.08 pozostają odblokowane do ręcznej korekty;
 - historia, wykres masy, seria dowiezionych dni i eksport JSON;
 - ekran startowy z symetrycznym trendem zmiany masy względem zera oraz wykresami glukozy i ketonów;
+- osobna zakładka `Trening` z planami A/B/C, krótkimi wskazówkami technicznymi i filmem do każdego ćwiczenia;
+- filmy uruchamiają się w aplikacji, z dodatkową możliwością otwarcia ich bezpośrednio w YouTube;
 - mobilny układ i instalacja jako PWA;
 - tryb lokalny bez konfiguracji;
 - prywatna synchronizacja, zdjęcia i werdykt AI po podłączeniu Supabase.

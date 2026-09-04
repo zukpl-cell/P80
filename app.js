@@ -211,6 +211,17 @@
       "Odwrotny pec deck"
     ]
   };
+  const TRAINING_VIDEOS = {
+    "Uginanie nóg siedząc": { videoId: "t9sTSr-JYSs", note: "Ustaw maszynę i wykonuj ruch spokojnie, bez odbijania ciężaru." },
+    "Wyciskanie na maszynie z podparciem": { videoId: "sqNwDkUU_Ps", note: "Plecy pozostają oparte, a ruch jest kontrolowany w obu kierunkach." },
+    "Ściąganie drążka neutralnie": { videoId: "lmmShS3KLB4", note: "Prowadź łokcie w dół i nie odchylaj gwałtownie tułowia." },
+    "Prostowanie nóg siedząc": { videoId: "YyvSfVjQeL0", note: "Dopasuj oś kolana do osi maszyny i nie szarp ciężarem." },
+    "Odwrotny pec deck": { videoId: "3RLqAh8-9Pg", note: "Klatka pozostaje oparta, a łopatki pracują bez rozpędzania ciężaru." },
+    "Wspięcia na łydki siedząc": { videoId: "ORY-ke6vcgk", note: "Pełny, spokojny zakres: rozciągnięcie na dole i zatrzymanie na górze." },
+    "Wiosłowanie z podparciem klatki": { videoId: "tZUYS7X50so", note: "Utrzymuj klatkę na podparciu i prowadź łokcie za tułów." },
+    "Pec deck": { videoId: "H4mVGHaK2f4", note: "Ustaw uchwyty na wysokości klatki i wracaj bez nadmiernego rozciągania barków." },
+    "Unoszenie bokiem siedząc": { videoId: "xDrYB81QXmY", note: "Unoszenie wykonuj bez bujania, w kontrolowanym zakresie." }
+  };
 
   const state = {
     reports: [],
@@ -231,6 +242,7 @@
     pendingWeightFile: null,
     weeklyLoading: false,
     installPrompt: null,
+    trainingSession: "A",
     midnightTimer: null,
     rolloverRunning: false
   };
@@ -270,6 +282,8 @@
       "evaluationVerdict", "evaluationHeadline", "evaluationDetails", "historyStats",
       "historyList", "exportButton", "weeklySummaryCard", "weeklyPeriod", "weeklyVerdict",
       "weeklyStats", "weeklyHeadline", "weeklyDetails", "generateWeeklyButton", "weeklyStatus",
+      "trainingTabs", "trainingSessionTitle", "trainingExerciseCount", "trainingExerciseList",
+      "trainingVideoDialog", "trainingVideoTitle", "trainingVideoFrame", "trainingVideoLink", "closeTrainingVideo",
       "weeklyPlan", "cloudStatus", "authCard",
       "authEmail", "authPassword", "loginButton", "setPasswordButton", "magicLinkButton",
       "logoutButton", "authMessage", "installButton",
@@ -315,6 +329,21 @@
     el.magicLinkButton.addEventListener("click", loginWithMagicLink);
     el.logoutButton.addEventListener("click", logout);
     el.installButton.addEventListener("click", installPwa);
+    el.trainingTabs.addEventListener("click", event => {
+      const button = event.target.closest("[data-training-session]");
+      if (!button) return;
+      renderTrainingLibrary(button.dataset.trainingSession);
+    });
+    el.trainingExerciseList.addEventListener("click", event => {
+      const button = event.target.closest("[data-training-video]");
+      if (!button) return;
+      openTrainingVideo(button.dataset.trainingVideo);
+    });
+    el.closeTrainingVideo.addEventListener("click", closeTrainingVideoDialog);
+    el.trainingVideoDialog.addEventListener("close", clearTrainingVideo);
+    el.trainingVideoDialog.addEventListener("click", event => {
+      if (event.target === el.trainingVideoDialog) closeTrainingVideoDialog();
+    });
 
     el.reportForm.addEventListener("input", event => {
       if (state.currentReport?.closed) return;
@@ -864,6 +893,49 @@
       reps: row.querySelector(".exercise-reps").value.trim(),
       load: numberOrNull(row.querySelector(".exercise-load").value)
     }));
+  }
+
+  function renderTrainingLibrary(session = state.trainingSession) {
+    if (!GYM_PLANS[session]) session = "A";
+    state.trainingSession = session;
+    const exercises = GYM_PLANS[session];
+    el.trainingTabs.querySelectorAll("[data-training-session]").forEach(button => {
+      const active = button.dataset.trainingSession === session;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-selected", String(active));
+    });
+    el.trainingSessionTitle.textContent = `Plan ${session}`;
+    el.trainingExerciseCount.textContent = `${exercises.length} ćwiczeń`;
+    el.trainingExerciseList.innerHTML = exercises.map((name, index) => {
+      const video = TRAINING_VIDEOS[name];
+      return `
+        <article class="training-exercise-item">
+          <span class="training-exercise-number">${String(index + 1).padStart(2, "0")}</span>
+          <div class="training-exercise-copy">
+            <strong>${escapeHtml(name)}</strong>
+            <small>${escapeHtml(video?.note || "Film pokazuje ustawienie i wykonanie ćwiczenia.")}</small>
+          </div>
+          <button class="secondary-button compact training-video-button" type="button" data-training-video="${escapeAttribute(name)}" ${video ? "" : "disabled"}>▶ Film</button>
+        </article>`;
+    }).join("");
+  }
+
+  function openTrainingVideo(name) {
+    const video = TRAINING_VIDEOS[name];
+    if (!video) return;
+    el.trainingVideoTitle.textContent = name;
+    el.trainingVideoFrame.title = `Technika ćwiczenia: ${name}`;
+    el.trainingVideoFrame.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(video.videoId)}?rel=0`;
+    el.trainingVideoLink.href = `https://www.youtube.com/watch?v=${encodeURIComponent(video.videoId)}`;
+    el.trainingVideoDialog.showModal();
+  }
+
+  function closeTrainingVideoDialog() {
+    el.trainingVideoDialog.close();
+  }
+
+  function clearTrainingVideo() {
+    el.trainingVideoFrame.src = "";
   }
 
   function scheduleSave() {
@@ -1980,6 +2052,7 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
     if (viewName === "dashboard") renderDashboard();
     if (viewName === "history") renderHistory();
+    if (viewName === "training") renderTrainingLibrary();
   }
 
   function exportReports() {
@@ -2014,7 +2087,7 @@
         window.location.reload();
       });
       navigator.serviceWorker
-        .register("./sw.js?v=23", { updateViaCache: "none" })
+        .register("./sw.js?v=24", { updateViaCache: "none" })
         .then(registration => registration.update())
         .catch(error => console.warn("Service worker:", error));
     }

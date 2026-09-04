@@ -6,14 +6,14 @@
   <meta name="theme-color" content="#0b0d10">
   <meta name="description" content="P80 — codzienny raport projektu 80 kg">
   <title>P80 — Projekt 80 kg</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=23">
-  <link rel="icon" href="./icons/favicon-32.png?v=23" type="image/png" sizes="32x32">
-  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=23" sizes="180x180">
-  <link rel="stylesheet" href="./styles.css?v=23">
+  <link rel="manifest" href="./manifest.webmanifest?v=24">
+  <link rel="icon" href="./icons/favicon-32.png?v=24" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=24" sizes="180x180">
+  <link rel="stylesheet" href="./styles.css?v=24">
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="./config.js?v=23"></script>
-  <script defer src="./app.js?v=23"></script>
+  <script defer src="./config.js?v=24"></script>
+  <script defer src="./app.js?v=24"></script>
 </head>
 <body>
   <header class="topbar">
@@ -307,6 +307,39 @@
       </article>
     </section>
 
+    <section id="view-training" class="view" aria-labelledby="trainingTitle">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">PLAN I TECHNIKA</p>
+          <h2 id="trainingTitle">Trening</h2>
+        </div>
+        <span class="badge badge-accent">A / B / C</span>
+      </div>
+
+      <article class="card training-intro-card">
+        <strong>Zasada treningu</strong>
+        <p>Startuj z zapasem około 3 powtórzeń. Bez serii do upadku — najpierw czysta, kontrolowana technika.</p>
+        <small>Filmy wymagają połączenia z internetem.</small>
+      </article>
+
+      <div id="trainingTabs" class="training-tabs" role="tablist" aria-label="Wybierz plan treningowy">
+        <button class="training-tab active" type="button" data-training-session="A" role="tab" aria-selected="true">Plan A</button>
+        <button class="training-tab" type="button" data-training-session="B" role="tab" aria-selected="false">Plan B</button>
+        <button class="training-tab" type="button" data-training-session="C" role="tab" aria-selected="false">Plan C</button>
+      </div>
+
+      <article class="card training-session-card">
+        <div class="card-title-row">
+          <div>
+            <p class="eyebrow">SESJA</p>
+            <h3 id="trainingSessionTitle">Plan A</h3>
+          </div>
+          <span id="trainingExerciseCount" class="badge badge-muted">6 ćwiczeń</span>
+        </div>
+        <div id="trainingExerciseList" class="training-library-list"></div>
+      </article>
+    </section>
+
     <section id="view-history" class="view" aria-labelledby="historyTitle">
       <div class="section-heading">
         <div>
@@ -430,6 +463,7 @@
   <nav class="bottom-nav" aria-label="Główna nawigacja">
     <button class="nav-button active" data-nav="dashboard"><span>⌂</span><small>Start</small></button>
     <button class="nav-button" data-nav="report"><span>＋</span><small>Raport</small></button>
+    <button class="nav-button" data-nav="training"><span>▶</span><small>Trening</small></button>
     <button class="nav-button" data-nav="history"><span>▦</span><small>Historia</small></button>
     <button class="nav-button" data-nav="plan"><span>◎</span><small>Plan</small></button>
     <button class="nav-button" data-nav="settings"><span>⚙</span><small>Ustawienia</small></button>
@@ -532,6 +566,22 @@
       <div id="entryValidation" class="alert alert-danger" hidden></div>
       <button id="saveEntryButton" class="primary-action" type="button">Zapisz pozycję</button>
     </form>
+  </dialog>
+
+  <dialog id="trainingVideoDialog" class="training-video-dialog">
+    <div class="dialog-card training-video-dialog-card">
+      <div class="card-title-row">
+        <div>
+          <p class="eyebrow">TECHNIKA ĆWICZENIA</p>
+          <h3 id="trainingVideoTitle">Film instruktażowy</h3>
+        </div>
+        <button id="closeTrainingVideo" class="icon-button" type="button" aria-label="Zamknij film">×</button>
+      </div>
+      <div class="training-video-frame-wrap">
+        <iframe id="trainingVideoFrame" title="Film instruktażowy" src="" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+      </div>
+      <a id="trainingVideoLink" class="secondary-button training-video-link" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer">Otwórz w YouTube</a>
+    </div>
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
